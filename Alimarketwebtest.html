@@ -1,0 +1,2329 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ali Market - Sistema Web para Restaurante y Distribuidora</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        brand: {
+                            50: '#fff1f2',
+                            100: '#ffe4e6',
+                            500: '#e11d48',
+                            600: '#dc2626',
+                            700: '#b91c1c',
+                            800: '#991b1b',
+                            900: '#7f1d1d',
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+    <!-- Lucide Icons -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+        body { font-family: 'Inter', sans-serif; }
+    </style>
+</head>
+<body class="bg-gray-50 text-gray-800 min-h-screen flex flex-col">
+
+    <!-- Header / Navbar Top -->
+    <header class="bg-brand-700 text-white shadow-md sticky top-0 z-50">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex items-center justify-between h-16">
+                
+                <!-- Logo & Brand -->
+                <div class="flex items-center space-x-3 cursor-pointer" onclick="switchTab('catalog')">
+                    <div class="bg-white p-2 rounded-full text-brand-700 font-bold shadow">
+                        <i data-lucide="utensils-crossed" class="w-6 h-6"></i>
+                    </div>
+                    <div>
+                        <span class="font-bold text-xl tracking-tight block leading-none">Ali Market</span>
+                        <span class="text-xs text-brand-100 font-light">Restaurante & Alimentos al Vacío</span>
+                    </div>
+                </div>
+
+                <!-- Navigation Tabs -->
+                <nav class="hidden md:flex space-x-1">
+                    <button onclick="switchTab('catalog')" id="nav-catalog" class="px-3 py-2 rounded-md text-sm font-medium transition flex items-center gap-2 bg-brand-800 text-white">
+                        <i data-lucide="store" class="w-4 h-4"></i> Catálogo
+                    </button>
+                    <button onclick="switchTab('cart')" id="nav-cart" class="px-3 py-2 rounded-md text-sm font-medium transition flex items-center gap-2 text-brand-100 hover:bg-brand-600 relative">
+                        <i data-lucide="shopping-cart" class="w-4 h-4"></i> Carrito
+                        <span id="cart-badge" class="hidden bg-white text-brand-700 text-xs font-bold px-1.5 py-0.5 rounded-full">0</span>
+                    </button>
+                    <button onclick="switchTab('pqrs')" id="nav-pqrs" class="px-3 py-2 rounded-md text-sm font-medium transition flex items-center gap-2 text-brand-100 hover:bg-brand-600">
+                        <i data-lucide="message-square" class="w-4 h-4"></i> PQRS
+                    </button>
+                </nav>
+
+                <!-- User account -->
+                <div class="flex items-center space-x-3">
+                    <div class="bg-brand-800 rounded-lg px-2 py-1.5 text-xs border border-brand-600">
+                        <span id="header-user-role" class="text-brand-100 font-medium">Visitante</span>
+                    </div>
+                    
+                    <button onclick="handleProfileButtonClick()" id="auth-btn" class="bg-white text-brand-700 hover:bg-brand-50 text-xs sm:text-sm font-semibold px-3 py-1.5 rounded-md shadow transition flex items-center gap-1" aria-label="Iniciar sesión o abrir perfil">
+                        <i data-lucide="user" class="w-4 h-4"></i> <span id="auth-btn-text">Ingresar / Registro</span>
+                        <span id="account-change-alert" class="hidden text-red-600" title="Hay cambios en tus pedidos o PQRS" aria-label="Hay cambios en tus pedidos o PQRS">
+                            <i data-lucide="circle-alert" class="w-4 h-4"></i>
+                        </span>
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Mobile Nav bar (Bottom Header) -->
+        <div class="md:hidden bg-brand-800 border-t border-brand-600 px-2 py-1.5 flex justify-around text-xs">
+            <button onclick="switchTab('catalog')" class="flex flex-col items-center py-1 px-2 text-white">
+                <i data-lucide="store" class="w-4 h-4 mb-0.5"></i> Tienda
+            </button>
+            <button onclick="switchTab('cart')" id="nav-cart-mobile" class="flex flex-col items-center py-1 px-2 text-brand-100 relative">
+                <i data-lucide="shopping-cart" class="w-4 h-4 mb-0.5"></i> Carrito
+                <span id="cart-badge-mobile" class="hidden bg-white text-brand-700 text-[10px] font-bold px-1 rounded-full absolute top-0 right-1">0</span>
+            </button>
+            <button onclick="switchTab('pqrs')" id="nav-pqrs-mobile" class="flex flex-col items-center py-1 px-2 text-brand-100">
+                <i data-lucide="message-square" class="w-4 h-4 mb-0.5"></i> PQRS
+            </button>
+        </div>
+    </header>
+
+    <!-- Role Indicator Banner -->
+    <div id="role-banner" class="bg-amber-100 border-b border-amber-200 text-amber-800 px-4 py-2 text-xs sm:text-sm flex justify-between items-center">
+        <div class="flex items-center gap-2 max-w-7xl mx-auto w-full">
+            <i data-lucide="info" class="w-4 h-4 text-amber-600 flex-shrink-0"></i>
+            <span id="role-banner-text">Navegando como <strong>Cliente Minorista</strong>: Ventas al detal con domicilios en el Área Metropolitana de Medellín (Solo catálogo de comidas rápidas).</span>
+        </div>
+    </div>
+
+    <!-- MAIN CONTENT CONTAINERS -->
+    <main class="flex-grow max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-6">
+
+        <!-- ALERT NOTIFICATION CONTAINER -->
+        <div id="toast-container" class="fixed top-20 right-4 z-50 flex flex-col gap-2 max-w-md"></div>
+
+        <!-- ========================================== -->
+        <!-- TAB 1: CATALOG / STORE (SEPARATED)         -->
+        <!-- ========================================== -->
+        <section id="tab-catalog" class="space-y-6">
+            
+            <!-- Banner promocional/informativo -->
+            <div class="bg-gradient-to-r from-brand-700 to-brand-900 rounded-2xl p-6 text-white shadow-lg relative overflow-hidden">
+                <div class="relative z-10 max-w-2xl">
+                    <span class="bg-brand-500/30 text-brand-100 text-xs font-semibold px-3 py-1 rounded-full border border-brand-400/30 uppercase tracking-wider">Restaurante & Distribuidora Ali Market</span>
+                    <h1 class="text-2xl sm:text-4xl font-extrabold mt-2 tracking-tight">Catálogo de Productos</h1>
+                    <p class="mt-2 text-brand-100 text-sm sm:text-base font-light">
+                        Selección exclusiva de comidas rápidas (al detal) y carnes/alimentos al vacío (al por mayor) con restricciones de compra según tu perfil de usuario.
+                    </p>
+                </div>
+                <div class="absolute -right-10 -bottom-10 opacity-15 pointer-events-none">
+                    <i data-lucide="utensils" class="w-64 h-64"></i>
+                </div>
+            </div>
+
+            <div class="flex flex-wrap gap-2" role="tablist" aria-label="Tipo de catálogo">
+                <button id="catalog-tab-minorista" type="button" role="tab" aria-controls="section-minorista" aria-selected="true" onclick="showCatalogSection('minorista')" class="px-4 py-2 rounded-lg text-sm font-semibold bg-brand-700 text-white">
+                    Catálogo minorista
+                </button>
+                <button id="catalog-tab-mayorista" type="button" role="tab" aria-controls="section-mayorista" aria-selected="false" onclick="showCatalogSection('mayorista')" class="px-4 py-2 rounded-lg text-sm font-semibold bg-white text-gray-600 border border-gray-200 hover:border-amber-500">
+                    Catálogo mayorista
+                </button>
+            </div>
+
+            <div>
+                
+                <!-- SECCIÓN 1: CATÁLOGO MINORISTA -->
+                <div id="section-minorista" class="space-y-4">
+                    <div class="flex items-center justify-between border-b border-gray-200 pb-3">
+                        <div class="flex items-center gap-2">
+                            <i data-lucide="store" class="w-5 h-5 text-brand-600"></i>
+                            <h2 class="text-lg font-bold text-gray-900">Catálogo Minorista — Comidas Rápidas & Platos (Consumo Final)</h2>
+                        </div>
+                        <span class="bg-brand-100 text-brand-800 text-xs font-semibold px-2.5 py-1 rounded-full">Exclusivo Minoristas</span>
+                    </div>
+                    <div id="grid-minorista" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+                        <!-- Rellenado por JS -->
+                    </div>
+                </div>
+
+                <!-- SECCIÓN 2: CATÁLOGO MAYORISTA -->
+                <div id="section-mayorista" class="hidden space-y-4 pt-6">
+                    <div class="flex items-center justify-between border-b border-gray-200 pb-3">
+                        <div class="flex items-center gap-2">
+                            <i data-lucide="package-search" class="w-5 h-5 text-amber-600"></i>
+                            <h2 class="text-lg font-bold text-gray-900">Catálogo Mayorista — Alimentos al Vacío & Carnes (Por Volumen)</h2>
+                        </div>
+                        <span class="bg-amber-100 text-amber-800 text-xs font-semibold px-2.5 py-1 rounded-full">Exclusivo Mayoristas (Mínimo requerido)</span>
+                    </div>
+                    <div id="grid-mayorista" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+                        <!-- Rellenado por JS -->
+                    </div>
+                </div>
+
+            </div>
+        </section>
+
+
+        <!-- ========================================== -->
+        <!-- TAB 2: SHOPPING CART & CHECKOUT            -->
+        <!-- ========================================== -->
+        <section id="tab-cart" class="hidden space-y-6">
+            <h2 class="text-2xl font-bold text-gray-900 flex items-center gap-2">
+                <i data-lucide="shopping-bag" class="text-brand-600"></i> Carrito de Compras & Confirmación
+            </h2>
+
+            <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+                
+                <!-- Lista de Productos en Carrito (2 cols) -->
+                <div class="lg:col-span-2 space-y-4">
+                    <div class="bg-white rounded-xl shadow-sm border border-gray-200 p-4 sm:p-6">
+                        <div id="cart-items-container" class="divide-y divide-gray-100">
+                            <!-- Se renderiza con JS -->
+                        </div>
+
+                        <div id="empty-cart-msg" class="text-center py-12 hidden">
+                            <i data-lucide="shopping-cart" class="w-16 h-16 text-gray-300 mx-auto mb-3"></i>
+                            <p class="text-gray-500 font-medium">Tu carrito está vacío actualmente.</p>
+                            <button onclick="switchTab('catalog')" class="mt-4 px-4 py-2 bg-brand-700 text-white text-xs font-semibold rounded-lg hover:bg-brand-800 transition">
+                                Explorar Catálogos
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Alertas de Reglas de Negocio en Carrito -->
+                    <div id="wholesale-warning-box" class="hidden bg-amber-50 border border-amber-200 rounded-xl p-4 text-amber-800 text-xs sm:text-sm">
+                        <div class="flex items-start gap-3">
+                            <i data-lucide="alert-triangle" class="w-5 h-5 text-amber-600 flex-shrink-0 mt-0.5"></i>
+                            <div>
+                                <h4 class="font-bold">Atención: Regla de compra mayorista</h4>
+                                <p class="mt-1" id="wholesale-warning-text">Los pedidos al por mayor requieren un volumen mínimo de 10 kg o 10 unidades por producto. Por favor ajusta las cantidades para proceder.</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Resumen de Pedido, Cobertura y Pago (1 col) -->
+                <div class="space-y-6">
+                    <div class="bg-white rounded-xl shadow-sm border border-gray-200 p-6 space-y-5 sticky top-20">
+                        <h3 class="font-bold text-gray-900 text-lg border-b border-gray-100 pb-3">Resumen de la Orden</h3>
+
+                        <!-- Desglose de Precios -->
+                        <div class="space-y-2 text-sm">
+                            <div class="flex justify-between text-gray-600">
+                                <span>Subtotal</span>
+                                <span class="font-semibold" id="summary-subtotal">$0</span>
+                            </div>
+                            <div class="flex justify-between text-gray-600">
+                                <span class="flex items-center gap-1">
+                                    Domicilio / Envío
+                                    <i data-lucide="help-circle" class="w-3.5 h-3.5 text-gray-400" title="Calculado según tipo de envío"></i>
+                                </span>
+                                <span class="font-semibold" id="summary-shipping">$0</span>
+                            </div>
+                            <div class="border-t border-gray-100 pt-2 flex justify-between font-bold text-base text-gray-900">
+                                <span>Total a Pagar</span>
+                                <span class="text-brand-700" id="summary-total">$0</span>
+                            </div>
+                        </div>
+
+                        <!-- Sección de logística y cobertura -->
+                        <div class="border-t border-gray-100 pt-4 space-y-3">
+                            <label class="block text-xs font-bold text-gray-700 uppercase tracking-wider">Tipo de Despacho & Cobertura</label>
+                            
+                            <div class="space-y-2">
+                                <label id="label-local-shipping" class="flex items-center gap-2 p-2.5 border rounded-lg cursor-pointer hover:bg-gray-50 text-xs">
+                                    <input type="radio" name="shippingType" value="local" checked onchange="updateShippingCost()" class="text-brand-600 focus:ring-brand-500">
+                                    <div>
+                                        <span class="font-semibold block text-gray-800">Domicilio Local (Área Metropolitana)</span>
+                                        <span class="text-gray-500 text-[11px]">Disponible para minoristas y mayoristas ($8.000)</span>
+                                    </div>
+                                </label>
+
+                                <label id="label-national-shipping" class="flex items-center gap-2 p-2.5 border rounded-lg cursor-pointer hover:bg-gray-50 text-xs">
+                                    <input type="radio" name="shippingType" value="national" onchange="updateShippingCost()" class="text-brand-600 focus:ring-brand-500">
+                                    <div>
+                                        <span class="font-semibold block text-gray-800">Despacho Nacional (Mayorista)</span>
+                                        <span class="text-gray-500 text-[11px]">Transportadora Externa ($25.000)</span>
+                                    </div>
+                                </label>
+                            </div>
+
+                            <div>
+                                <label class="block text-xs font-medium text-gray-600 mb-1">Dirección de Entrega</label>
+                                <input type="text" id="delivery-address" placeholder="Ej: Cra 43A # 12-34, Medellín / Ciudad" class="w-full text-xs p-2.5 border border-gray-300 rounded-lg focus:ring-brand-500 focus:border-brand-500">
+                            </div>
+                        </div>
+
+                        <!-- Sección de método de pago -->
+                        <div class="border-t border-gray-100 pt-4 space-y-3">
+                            <label class="block text-xs font-bold text-gray-700 uppercase tracking-wider">Medio de pago</label>
+                            <select id="payment-method" class="w-full text-xs p-2.5 border border-gray-300 rounded-lg focus:ring-brand-500 focus:border-brand-500">
+                                <option value="efectivo">Efectivo contra entrega</option>
+                                <option value="nequi">Transferencia Nequi / Bancolombia</option>
+                                <option value="tarjeta">Tarjeta Débito / Crédito (Datáfono)</option>
+                            </select>
+                        </div>
+
+                        <!-- Botón de Confirmación -->
+                        <button onclick="processOrder()" id="btn-submit-order" class="w-full py-3 bg-brand-700 hover:bg-brand-800 text-white font-bold text-sm rounded-xl shadow-md transition flex items-center justify-center gap-2">
+                            <i data-lucide="check-circle" class="w-5 h-5"></i> Confirmar Pedido
+                        </button>
+
+                    </div>
+                </div>
+
+            </div>
+        </section>
+
+
+        <!-- ========================================== -->
+        <!-- TAB 3: PQRS -->
+        <!-- ========================================== -->
+        <section id="tab-pqrs" class="hidden max-w-2xl mx-auto space-y-6">
+            <div class="bg-white rounded-2xl shadow-sm border border-gray-200 p-6 sm:p-8 space-y-6">
+                <div>
+                    <h2 class="text-2xl font-bold text-gray-900 flex items-center gap-2">
+                        <i data-lucide="message-square-plus" class="text-brand-600"></i> Módulo PQRS
+                    </h2>
+                    <p class="text-gray-500 text-xs sm:text-sm mt-1">
+                        Registra tus peticiones, quejas, reclamos o sugerencias y consulta su seguimiento desde tu cuenta.
+                    </p>
+                </div>
+
+                <form id="pqrs-form" onsubmit="handlePQRSSubmit(event)" class="space-y-4">
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                        <div>
+                            <label class="block text-xs font-semibold text-gray-700 mb-1">Nombre Completo *</label>
+                            <input type="text" id="pqrs-name" required readonly aria-readonly="true" class="w-full text-xs p-2.5 border border-gray-300 rounded-lg bg-gray-100 text-gray-600 cursor-not-allowed">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-semibold text-gray-700 mb-1">Correo Electrónico *</label>
+                            <input type="email" id="pqrs-email" required readonly aria-readonly="true" class="w-full text-xs p-2.5 border border-gray-300 rounded-lg bg-gray-100 text-gray-600 cursor-not-allowed">
+                        </div>
+                    </div>
+
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                        <div>
+                            <label class="block text-xs font-semibold text-gray-700 mb-1">Documento / NIT *</label>
+                            <input type="text" id="pqrs-doc" required readonly aria-readonly="true" class="w-full text-xs p-2.5 border border-gray-300 rounded-lg bg-gray-100 text-gray-600 cursor-not-allowed">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-semibold text-gray-700 mb-1">Tipo de Solicitud *</label>
+                            <select id="pqrs-type" class="w-full text-xs p-2.5 border border-gray-300 rounded-lg focus:ring-brand-500 focus:border-brand-500">
+                                <option value="Petición">Petición</option>
+                                <option value="Queja">Queja</option>
+                                <option value="Reclamo">Reclamo</option>
+                                <option value="Sugerencia">Sugerencia</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div>
+                        <label class="block text-xs font-semibold text-gray-700 mb-1">Detalle del Mensaje *</label>
+                        <textarea id="pqrs-message" rows="4" required placeholder="Describe detalladamente tu solicitud..." class="w-full text-xs p-2.5 border border-gray-300 rounded-lg focus:ring-brand-500 focus:border-brand-500"></textarea>
+                    </div>
+
+                    <button type="submit" class="w-full py-3 bg-brand-700 hover:bg-brand-800 text-white font-bold text-sm rounded-xl shadow-md transition flex items-center justify-center gap-2">
+                        <i data-lucide="send" class="w-4 h-4"></i> Enviar PQRS
+                    </button>
+                </form>
+
+                <!-- Resumen de la solicitud registrada -->
+                <div id="email-preview-card" class="hidden border border-green-200 bg-green-50 rounded-xl p-4 space-y-2 text-xs text-green-900">
+                    <div class="flex items-center gap-2 font-bold text-green-700 border-b border-green-200 pb-2">
+                        <i data-lucide="circle-check" class="w-4 h-4"></i> PQRS registrada correctamente
+                    </div>
+                    <p><strong>Solicitante:</strong> <span id="sim-from"></span></p>
+                    <p><strong>Tipo de solicitud:</strong> <span id="sim-type"></span></p>
+                    <p><strong>Documento:</strong> <span id="sim-doc"></span></p>
+                    <div class="bg-white p-3 rounded border border-green-200 text-gray-700 italic mt-2" id="sim-body"></div>
+                </div>
+            </div>
+        </section>
+
+
+        <!-- ========================================== -->
+        <!-- TAB 4: ACCOUNT -->
+        <!-- ========================================== -->
+        <section id="tab-account" class="hidden space-y-8">
+            <div class="flex flex-wrap items-center justify-between gap-4 border-b border-gray-200 pb-4">
+                <div>
+                    <h2 class="text-2xl font-bold text-gray-900 flex items-center gap-2">
+                        <i data-lucide="user-round" class="text-brand-600"></i> Mi cuenta
+                    </h2>
+                    <p class="text-xs text-gray-500">Consulta tu información y gestiona tus pedidos y solicitudes.</p>
+                </div>
+                <button type="button" onclick="logout()" class="px-4 py-2 bg-gray-800 hover:bg-black text-white text-xs font-bold rounded-lg">Cerrar sesión</button>
+            </div>
+
+            <div id="account-subnav" class="flex flex-wrap gap-2 border-b border-gray-200 pb-4"></div>
+
+            <section id="account-profile" class="account-subsection hidden bg-white rounded-2xl shadow-sm border border-gray-200 p-6 space-y-5">
+                <h3 class="font-bold text-gray-800 text-lg">Datos de cuenta</h3>
+                <dl class="grid grid-cols-1 sm:grid-cols-2 gap-4 text-sm">
+                    <div><dt class="text-gray-500">Nombre</dt><dd id="account-display-name" class="font-semibold"></dd></div>
+                    <div><dt class="text-gray-500">Tipo de cuenta</dt><dd id="account-display-role" class="font-semibold"></dd></div>
+                    <div><dt class="text-gray-500">Tipo de documento</dt><dd id="account-display-doc-type" class="font-semibold"></dd></div>
+                    <div><dt class="text-gray-500">Número de documento</dt><dd id="account-display-doc" class="font-semibold"></dd></div>
+                    <div><dt class="text-gray-500">Correo</dt><dd id="account-display-email" class="font-semibold"></dd></div>
+                    <div><dt class="text-gray-500">Número de contacto</dt><dd id="account-display-phone" class="font-semibold"></dd></div>
+                </dl>
+                <div class="border-t border-gray-100 pt-4 flex justify-end">
+                    <button type="button" onclick="openAccountEditModal()" class="px-5 py-2.5 bg-brand-700 hover:bg-brand-800 text-white font-bold text-xs rounded-lg">Editar datos</button>
+                </div>
+            </section>
+
+            <section id="account-orders" class="account-subsection hidden bg-white rounded-2xl shadow-sm border border-gray-200 p-6 space-y-4">
+                <h3 class="font-bold text-gray-800 text-lg">Seguimiento de pedidos</h3>
+                <div id="account-orders-list" class="space-y-3"></div>
+            </section>
+
+            <section id="account-pqrs" class="account-subsection hidden bg-white rounded-2xl shadow-sm border border-gray-200 p-6 space-y-4">
+                <h3 class="font-bold text-gray-800 text-lg">Seguimiento de PQRS</h3>
+                <div id="account-pqrs-list" class="space-y-3"></div>
+            </section>
+
+            <section id="account-admin-orders" class="account-subsection hidden bg-white rounded-2xl shadow-sm border border-gray-200 p-6 space-y-4">
+                <h3 class="font-bold text-gray-800 text-lg">Administración de pedidos</h3>
+                <div class="overflow-x-auto">
+                    <table class="w-full text-left text-xs text-gray-600">
+                        <thead class="bg-gray-50 text-gray-700 uppercase tracking-wider border-b">
+                            <tr><th class="p-3">ID Pedido</th><th class="p-3">Cliente / Tipo</th><th class="p-3">Destino</th><th class="p-3">Estado</th><th class="p-3">Transportadora</th><th class="p-3">N° Guía</th><th class="p-3 text-right">Acción</th></tr>
+                        </thead>
+                        <tbody id="admin-orders-table" class="divide-y divide-gray-100"></tbody>
+                    </table>
+                </div>
+            </section>
+
+            <section id="account-admin-pqrs" class="account-subsection hidden bg-white rounded-2xl shadow-sm border border-gray-200 p-6 space-y-4">
+                <h3 class="font-bold text-gray-800 text-lg">Administración de PQRS</h3>
+                <div id="admin-pqrs-list" class="space-y-3"></div>
+            </section>
+
+            <div id="account-admin-inventory-form" class="account-subsection hidden bg-white rounded-2xl shadow-sm border border-gray-200 p-6 space-y-4">
+                <h3 class="font-bold text-gray-800 text-base flex items-center gap-2">
+                    <i data-lucide="plus-circle" class="w-5 h-5 text-brand-600"></i> Registrar Nuevo Producto en el Catálogo
+                </h3>
+
+                <form onsubmit="handleAddNewProduct(event)" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 text-xs">
+                    <div>
+                        <label class="block font-semibold text-gray-700 mb-1">Nombre del Producto *</label>
+                        <input type="text" id="new-prod-name" required placeholder="Ej: Chorizo Artesanal al Vacío" class="w-full p-2.5 border border-gray-300 rounded-lg">
+                    </div>
+                    <div>
+                        <label class="block font-semibold text-gray-700 mb-1">Categoría / Tipo *</label>
+                        <select id="new-prod-category" class="w-full p-2.5 border border-gray-300 rounded-lg">
+                            <option value="minorista">Catálogo Minorista (Comida Rápida)</option>
+                            <option value="mayorista">Catálogo Mayorista (Alimento al Vacío)</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block font-semibold text-gray-700 mb-1">Precio Unitario ($ COP) *</label>
+                        <input type="number" id="new-prod-price" required min="1" placeholder="Ej: 25000" class="w-full p-2.5 border border-gray-300 rounded-lg">
+                    </div>
+                    <div>
+                        <label class="block font-semibold text-gray-700 mb-1">Stock Inicial *</label>
+                        <input type="number" id="new-prod-stock" required min="0" placeholder="Ej: 50" class="w-full p-2.5 border border-gray-300 rounded-lg">
+                    </div>
+                    <div>
+                        <label class="block font-semibold text-gray-700 mb-1">Unidad de Medida *</label>
+                        <select id="new-prod-unit" class="w-full p-2.5 border border-gray-300 rounded-lg">
+                            <option value="unidad">Unidad</option>
+                            <option value="kg">Kilogramos (kg)</option>
+                            <option value="paquete">Paquete</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block font-semibold text-gray-700 mb-1">Mínimo Mayorista (Si aplica)</label>
+                        <input type="number" id="new-prod-min" value="10" min="1" placeholder="Ej: 10" class="w-full p-2.5 border border-gray-300 rounded-lg">
+                    </div>
+                    <div>
+                        <label class="block font-semibold text-gray-700 mb-1">URL de Imagen (Opcional)</label>
+                        <input type="url" id="new-prod-img" placeholder="https://images.unsplash.com/..." class="w-full p-2.5 border border-gray-300 rounded-lg">
+                    </div>
+                    <div>
+                        <label class="block font-semibold text-gray-700 mb-1">Descripción Breve</label>
+                        <input type="text" id="new-prod-desc" placeholder="Detalles del producto..." class="w-full p-2.5 border border-gray-300 rounded-lg">
+                    </div>
+                    <div class="sm:col-span-2 lg:col-span-4 flex justify-end">
+                        <button type="submit" class="px-6 py-2.5 bg-brand-700 hover:bg-brand-800 text-white font-bold rounded-lg shadow transition flex items-center gap-2">
+                            <i data-lucide="plus" class="w-4 h-4"></i> Guardar Producto en Catálogo
+                        </button>
+                    </div>
+                </form>
+            </div>
+
+            <!-- Inventory management -->
+            <div id="account-admin-inventory" class="account-subsection hidden bg-white rounded-2xl shadow-sm border border-gray-200 p-6 space-y-4">
+                <h3 class="font-bold text-gray-800 text-base flex items-center gap-2">
+                    <i data-lucide="boxes" class="w-5 h-5 text-brand-600"></i> Control de Stock en Tiempo Real
+                </h3>
+                
+                <div class="overflow-x-auto">
+                    <table class="w-full text-left text-xs text-gray-600">
+                        <thead class="bg-gray-50 text-gray-700 uppercase tracking-wider border-b">
+                            <tr>
+                                <th class="p-3">Producto</th>
+                                <th class="p-3">Sección / Catálogo</th>
+                                <th class="p-3">Precio</th>
+                                <th class="p-3">Stock Actual</th>
+                                <th class="p-3 text-right">Actualizar Stock</th>
+                            </tr>
+                        </thead>
+                        <tbody id="admin-inventory-table" class="divide-y divide-gray-100">
+                            <!-- Se renderiza vía JS -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+        </section>
+
+    </main>
+
+    <!-- FOOTER -->
+    <footer class="bg-gray-900 text-gray-400 text-xs py-8 border-t border-gray-800 mt-12">
+        <div class="max-w-7xl mx-auto px-4 grid grid-cols-1 md:grid-cols-3 gap-6">
+            <div>
+                <span class="font-bold text-white text-base block mb-2">Restaurante & Distribuidora Ali Market</span>
+                <p>Comidas rápidas para clientes minoristas y productos empacados al vacío para clientes mayoristas.</p>
+            </div>
+            <div>
+                <span class="font-bold text-white text-base block mb-2">Cobertura de Servicio</span>
+                <p>• Domicilios Locales: Área Metropolitana de Medellín (Minoristas).</p>
+                <p>• Despachos Mayoristas: Cobertura Nacional.</p>
+            </div>
+            <div>
+                <span class="font-bold text-white text-base block mb-2">Contacto & PQRS</span>
+                <p>Correo de PQRS: pqrs@alimarket.com.co</p>
+                <p>Atención directa por canal institucional</p>
+            </div>
+        </div>
+        <div class="max-w-7xl mx-auto px-4 border-t border-gray-800 mt-6 pt-4 text-center text-gray-500">
+            © 2026 Ali Market - Todos los derechos reservados.
+        </div>
+    </footer>
+
+    <!-- ========================================== -->
+    <!-- AUTH MODAL -->
+    <!-- ========================================== -->
+    <div id="auth-modal" class="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 hidden items-center justify-center p-4">
+        <div class="bg-white rounded-2xl shadow-xl max-w-lg w-full max-h-[90vh] overflow-y-auto p-6 relative">
+            <button onclick="closeAuthModal()" class="absolute top-4 right-4 text-gray-400 hover:text-gray-600">
+                <i data-lucide="x" class="w-5 h-5"></i>
+            </button>
+            
+            <h3 class="text-xl font-bold text-gray-900 mb-4" id="modal-title">Bienvenido a Ali Market</h3>
+
+            <div id="auth-forms">
+                <div class="flex gap-2 mb-4 border-b border-gray-200">
+                    <button id="login-tab" type="button" onclick="showAuthForm('login')" class="px-3 py-2 text-sm font-semibold border-b-2 border-brand-700 text-brand-700">Iniciar sesión</button>
+                    <button id="register-tab" type="button" onclick="showAuthForm('register')" class="px-3 py-2 text-sm font-semibold border-b-2 border-transparent text-gray-500">Registrarse</button>
+                </div>
+
+                <form id="login-form" onsubmit="handleLoginSubmit(event)" class="space-y-4">
+                    <div>
+                        <label for="login-email" class="block text-xs font-semibold text-gray-700 mb-1">Correo electrónico *</label>
+                        <input type="email" id="login-email" autocomplete="email" required placeholder="usuario@correo.com" aria-describedby="login-error" oninput="clearLoginError()" class="w-full text-sm p-2.5 border border-gray-300 rounded-lg focus:ring-brand-500">
+                    </div>
+                    <div>
+                        <label for="login-password" class="block text-xs font-semibold text-gray-700 mb-1">Contraseña *</label>
+                        <input type="password" id="login-password" autocomplete="current-password" required aria-describedby="login-error" oninput="clearLoginError()" class="w-full text-sm p-2.5 border border-gray-300 rounded-lg focus:ring-brand-500">
+                    </div>
+                    <p id="login-error" class="hidden rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700" role="alert" aria-live="polite"></p>
+                    <button type="submit" class="w-full py-2.5 bg-brand-700 hover:bg-brand-800 text-white font-bold text-sm rounded-lg transition shadow">Iniciar sesión</button>
+                </form>
+
+                <form id="register-form" onsubmit="handleRegisterSubmit(event)" oninput="clearRegistrationError()" class="hidden space-y-3" novalidate>
+                    <div>
+                        <label for="reg-role" class="block text-xs font-semibold text-gray-700 mb-1">Tipo de cuenta *</label>
+                        <select id="reg-role" required class="w-full text-sm p-2.5 border border-gray-300 rounded-lg focus:ring-brand-500">
+                            <option value="minorista">Minorista</option>
+                            <option value="mayorista">Mayorista</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label for="reg-doc-type" class="block text-xs font-semibold text-gray-700 mb-1">Tipo de documento *</label>
+                        <select id="reg-doc-type" required class="w-full text-sm p-2.5 border border-gray-300 rounded-lg focus:ring-brand-500">
+                            <option value="cedula">Cédula de ciudadanía</option>
+                            <option value="nit">NIT</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label for="reg-doc" class="block text-xs font-semibold text-gray-700 mb-1">Número de documento *</label>
+                        <input type="text" id="reg-doc" required autocomplete="off" class="w-full text-sm p-2.5 border border-gray-300 rounded-lg focus:ring-brand-500">
+                    </div>
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                        <div>
+                            <label for="reg-first-name" class="block text-xs font-semibold text-gray-700 mb-1">Nombres *</label>
+                            <input type="text" id="reg-first-name" required autocomplete="given-name" class="w-full text-sm p-2.5 border border-gray-300 rounded-lg focus:ring-brand-500">
+                        </div>
+                        <div>
+                            <label for="reg-last-name" class="block text-xs font-semibold text-gray-700 mb-1">Apellidos *</label>
+                            <input type="text" id="reg-last-name" required autocomplete="family-name" class="w-full text-sm p-2.5 border border-gray-300 rounded-lg focus:ring-brand-500">
+                        </div>
+                    </div>
+                    <div>
+                        <label for="reg-email" class="block text-xs font-semibold text-gray-700 mb-1">Correo *</label>
+                        <input type="email" id="reg-email" required autocomplete="email" class="w-full text-sm p-2.5 border border-gray-300 rounded-lg focus:ring-brand-500">
+                    </div>
+                    <div>
+                        <label for="reg-email-confirm" class="block text-xs font-semibold text-gray-700 mb-1">Confirmar correo *</label>
+                        <input type="email" id="reg-email-confirm" required autocomplete="email" class="w-full text-sm p-2.5 border border-gray-300 rounded-lg focus:ring-brand-500">
+                    </div>
+                    <div>
+                        <label for="reg-password" class="block text-xs font-semibold text-gray-700 mb-1">Contraseña * (mínimo 8 caracteres)</label>
+                        <input type="password" id="reg-password" required minlength="8" autocomplete="new-password" class="w-full text-sm p-2.5 border border-gray-300 rounded-lg focus:ring-brand-500">
+                    </div>
+                    <div>
+                        <label for="reg-password-confirm" class="block text-xs font-semibold text-gray-700 mb-1">Confirmar contraseña *</label>
+                        <input type="password" id="reg-password-confirm" required minlength="8" autocomplete="new-password" class="w-full text-sm p-2.5 border border-gray-300 rounded-lg focus:ring-brand-500">
+                    </div>
+                    <p id="register-error" class="hidden rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700" role="alert" aria-live="polite"></p>
+                    <button type="submit" class="w-full py-2.5 bg-brand-700 hover:bg-brand-800 text-white font-bold text-sm rounded-lg transition shadow">Crear cuenta</button>
+                </form>
+            </div>
+
+            <div id="auth-session-panel" class="hidden space-y-4">
+                <p class="text-sm text-gray-700">Sesión iniciada como <strong id="auth-session-name"></strong>.</p>
+                <p class="text-xs text-gray-500" id="auth-session-email"></p>
+                <button type="button" onclick="logout()" class="w-full py-2.5 bg-gray-800 hover:bg-black text-white font-bold text-sm rounded-lg transition">Cerrar sesión</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="pqrs-delete-modal" class="fixed inset-0 bg-black/50 backdrop-blur-sm z-[60] hidden items-center justify-center p-4" role="dialog" aria-modal="true" aria-labelledby="pqrs-delete-title">
+        <div class="bg-white rounded-2xl shadow-xl max-w-md w-full p-6 space-y-4">
+            <div class="flex items-start gap-3">
+                <div class="bg-red-100 text-red-700 rounded-full p-2">
+                    <i data-lucide="trash-2" class="w-5 h-5"></i>
+                </div>
+                <div>
+                    <h3 id="pqrs-delete-title" class="text-lg font-bold text-gray-900">Eliminar PQRS</h3>
+                    <p id="pqrs-delete-message" class="mt-1 text-sm text-gray-600">¿Seguro que deseas eliminar esta solicitud? Esta acción no se puede deshacer.</p>
+                </div>
+            </div>
+            <div class="flex justify-end gap-2 pt-2">
+                <button type="button" onclick="closePQRSDeleteModal()" class="px-4 py-2 border border-gray-300 text-gray-700 text-sm font-semibold rounded-lg hover:bg-gray-50">Cancelar</button>
+                <button type="button" onclick="confirmDeletePQRS()" class="px-4 py-2 bg-red-700 hover:bg-red-800 text-white text-sm font-semibold rounded-lg">Eliminar PQRS</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="account-required-modal" class="fixed inset-0 bg-black/50 backdrop-blur-sm z-[60] hidden items-center justify-center p-4" role="dialog" aria-modal="true" aria-labelledby="account-required-title">
+        <div class="bg-white rounded-2xl shadow-xl max-w-md w-full p-6 space-y-4">
+            <div class="flex items-start gap-3">
+                <div class="bg-amber-100 text-amber-700 rounded-full p-2">
+                    <i data-lucide="user-round" class="w-5 h-5"></i>
+                </div>
+                <div>
+                    <h3 id="account-required-title" class="text-lg font-bold text-gray-900">Necesitas una cuenta</h3>
+                    <p id="account-required-message" class="mt-1 text-sm text-gray-600">Para continuar, inicia sesión o crea una cuenta de Ali Market.</p>
+                </div>
+            </div>
+
+            <div class="flex justify-end gap-2 pt-2">
+                <button type="button" onclick="closeAccountRequiredModal()" class="px-4 py-2 border border-gray-300 text-gray-700 text-sm font-semibold rounded-lg hover:bg-gray-50">Ahora no</button>
+                <button type="button" onclick="continueToAccountAccess()" class="px-4 py-2 bg-brand-700 hover:bg-brand-800 text-white text-sm font-semibold rounded-lg">Iniciar sesión / Registrarse</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="account-edit-modal" class="fixed inset-0 bg-black/50 backdrop-blur-sm z-[60] hidden items-center justify-center p-4" role="dialog" aria-modal="true" aria-labelledby="account-edit-title">
+        <div class="bg-white rounded-2xl shadow-xl max-w-lg w-full max-h-[90vh] overflow-y-auto p-6 space-y-4">
+            <div class="flex items-start justify-between gap-3">
+                <div>
+                    <h3 id="account-edit-title" class="text-lg font-bold text-gray-900">Editar datos de cuenta</h3>
+                    <p class="mt-1 text-sm text-gray-600">Confirma tu contraseña para guardar los cambios.</p>
+                </div>
+                <button type="button" onclick="closeAccountEditModal()" aria-label="Cerrar" class="text-gray-400 hover:text-gray-600">
+                    <i data-lucide="x" class="w-5 h-5"></i>
+                </button>
+            </div>
+            <form id="account-edit-form" onsubmit="saveAccountDetails(event)" oninput="clearAccountEditError()" class="space-y-3" novalidate>
+                <div>
+                    <label for="account-edit-name" class="block text-xs font-semibold text-gray-700 mb-1">Nombre completo *</label>
+                    <input id="account-edit-name" type="text" required autocomplete="name" class="w-full text-sm p-2.5 border border-gray-300 rounded-lg">
+                </div>
+                <div>
+                    <label for="account-edit-doc-type" class="block text-xs font-semibold text-gray-700 mb-1">Tipo de documento *</label>
+                    <select id="account-edit-doc-type" required class="w-full text-sm p-2.5 border border-gray-300 rounded-lg">
+                        <option value="cedula">Cédula de ciudadanía</option>
+                        <option value="nit">NIT</option>
+                    </select>
+                </div>
+                <div>
+                    <label for="account-edit-doc" class="block text-xs font-semibold text-gray-700 mb-1">Número de documento *</label>
+                    <input id="account-edit-doc" type="text" required class="w-full text-sm p-2.5 border border-gray-300 rounded-lg">
+                </div>
+                <div>
+                    <label for="account-edit-phone" class="block text-xs font-semibold text-gray-700 mb-1">Número de contacto *</label>
+                    <input id="account-edit-phone" type="tel" required autocomplete="tel" class="w-full text-sm p-2.5 border border-gray-300 rounded-lg">
+                </div>
+                <div>
+                    <label for="account-edit-password" class="block text-xs font-semibold text-gray-700 mb-1">Contraseña actual *</label>
+                    <input id="account-edit-password" type="password" required autocomplete="current-password" class="w-full text-sm p-2.5 border border-gray-300 rounded-lg">
+                </div>
+                <p id="account-edit-error" class="hidden rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700" role="alert" aria-live="polite"></p>
+                <div class="flex justify-end gap-2 pt-2">
+                    <button type="button" onclick="closeAccountEditModal()" class="px-4 py-2 border border-gray-300 text-gray-700 text-sm font-semibold rounded-lg hover:bg-gray-50">Cancelar</button>
+                    <button type="submit" class="px-4 py-2 bg-brand-700 hover:bg-brand-800 text-white text-sm font-semibold rounded-lg">Confirmar cambios</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- ========================================== -->
+    <!-- JAVASCRIPT LOGIC                           -->
+    <!-- ========================================== -->
+    <script>
+        // --- BASE DE DATOS DE PRODUCTOS INICIALES ---
+        let products = [
+            {
+                id: 1,
+                name: "Hamburguesa Artesanal Ali",
+                category: "minorista",
+                price: 24000,
+                unit: "unidad",
+                stock: 25,
+                image: "https://images.unsplash.com/photo-1568901346375-23c9450c58cd?w=500&auto=format&fit=crop&q=60",
+                desc: "150g de carne 100% res, queso cheddar, tocineta crujiente y salsa especial."
+            },
+            {
+                id: 2,
+                name: "Perro Caliente Especial",
+                category: "minorista",
+                price: 18000,
+                unit: "unidad",
+                stock: 30,
+                image: "https://images.unsplash.com/photo-1619740455993-9e612b1af08a?w=500&auto=format&fit=crop&q=60",
+                desc: "Salchicha americana, ripio de papa, queso fundido y tocino gratinado."
+            },
+            {
+                id: 3,
+                name: "Salchipapa Suprema Ali",
+                category: "minorista",
+                price: 22000,
+                unit: "unidad",
+                stock: 15,
+                image: "https://images.unsplash.com/photo-1585109649139-366815a0d713?w=500&auto=format&fit=crop&q=60",
+                desc: "Papas a la francesa, variedad de salchichas, maíz dulce, queso mozarella y salsas."
+            },
+            {
+                id: 4,
+                name: "Carne de Res al Vacío (Punta de Anca)",
+                category: "mayorista",
+                price: 38000,
+                unit: "kg",
+                minWholesale: 10,
+                stock: 120,
+                image: "https://images.unsplash.com/photo-1603048588665-791ca8aea617?w=500&auto=format&fit=crop&q=60",
+                desc: "Corte madurado empacado al vacío para larga conservación. (Mínimo: 10 kg)."
+            },
+            {
+                id: 5,
+                name: "Costilla de Cerdo BBQ (Empacada al Vacío)",
+                category: "mayorista",
+                price: 32000,
+                unit: "kg",
+                minWholesale: 10,
+                stock: 80,
+                image: "https://images.unsplash.com/photo-1544025162-d76694265947?w=500&auto=format&fit=crop&q=60",
+                desc: "Costilla pre-cocida maridada en salsa BBQ artesanal. (Mínimo: 10 kg)."
+            },
+            {
+                id: 6,
+                name: "Pechuga Desmechada al Vacío (Paquete X 1kg)",
+                category: "mayorista",
+                price: 28000,
+                unit: "unidades",
+                minWholesale: 10,
+                stock: 50,
+                image: "https://images.unsplash.com/photo-1604503468506-a8da13d82791?w=500&auto=format&fit=crop&q=60",
+                desc: "Pechuga de pollo lista para servir, ideal para negocios. (Mínimo: 10 Unidades)."
+            }
+        ];
+
+        // --- ESTADO GLOBAL DE LA APLICACIÓN ---
+        let currentRole = 'minorista'; // minorista | mayorista | admin
+        let activeCatalogSection = 'minorista';
+        let currentUser = null;
+        let registeredUsers = [];
+        const USERS_STORAGE_KEY = 'aliMarketUsers';
+        const SESSION_STORAGE_KEY = 'aliMarketSession';
+        const PRODUCTS_STORAGE_KEY = 'aliMarketProducts';
+        const ORDERS_STORAGE_KEY = 'aliMarketOrders';
+        const PQRS_STORAGE_KEY = 'aliMarketPQRS';
+        let pendingPQRSDeleteId = null;
+        let cart = []; // [{ product, quantity }]
+        let orders = [
+            {
+                id: "ORD-9821",
+                customer: "Distribuidora El Norte S.A.S",
+                type: "mayorista",
+                destination: "Bogotá D.C. (Nacional)",
+                status: "Pagado",
+                courier: "Servientrega",
+                tracking: "SE-99881122"
+            },
+            {
+                id: "ORD-9822",
+                customer: "Juan Carlos Gómez",
+                type: "minorista",
+                destination: "Medellín (Área Metropolitana)",
+                status: "Pagado",
+                courier: "Domiciliario Propio",
+                tracking: "N/A Local"
+            }
+        ];
+        let pqrsRequests = [];
+
+        // --- INICIALIZACIÓN ---
+        window.onload = function() {
+            lucide.createIcons();
+            loadAppData();
+            initializeAuth();
+            renderCatalogs();
+            updateCartBadge();
+            renderAdminTables();
+            updateAdminVisibility();
+        };
+
+        // --- NAVEGACIÓN POR PESTAÑAS ---
+        function switchTab(tabId) {
+            if (currentRole === 'admin' && ['cart', 'pqrs'].includes(tabId)) {
+                showToast('El administrador no puede crear pedidos ni PQRS.', 'error');
+                return;
+            }
+            if (tabId === 'account' && !currentUser) {
+                showToast("Inicia sesión para acceder a tu cuenta.", "error");
+                return;
+            }
+
+            ['catalog', 'cart', 'pqrs', 'account'].forEach(tab => {
+                const el = document.getElementById(`tab-${tab}`);
+                if (el) el.classList.add('hidden');
+                
+                const navBtn = document.getElementById(`nav-${tab}`);
+                if (navBtn) {
+                    navBtn.classList.remove('bg-brand-800', 'text-white');
+                    navBtn.classList.add('text-brand-100');
+                }
+            });
+
+            const targetTab = document.getElementById(`tab-${tabId}`);
+            if (targetTab) targetTab.classList.remove('hidden');
+
+            const activeNav = document.getElementById(`nav-${tabId}`);
+            if (activeNav) {
+                activeNav.classList.add('bg-brand-800', 'text-white');
+                activeNav.classList.remove('text-brand-100');
+            }
+
+            if (tabId === 'cart') renderCart();
+            if (tabId === 'pqrs') syncPQRSAccountFields();
+            if (tabId === 'account') {
+                renderAccount();
+                refreshAccountChangeAlert();
+            }
+        }
+
+        function openAccount() {
+            if (!currentUser) {
+                openAuthModal();
+                return;
+            }
+            switchTab('account');
+        }
+
+        function showAccountRequiredModal(message) {
+            document.getElementById('account-required-message').innerText = message;
+            document.getElementById('account-required-modal').classList.remove('hidden');
+            document.getElementById('account-required-modal').classList.add('flex');
+            lucide.createIcons();
+        }
+
+        function closeAccountRequiredModal() {
+            document.getElementById('account-required-modal').classList.add('hidden');
+            document.getElementById('account-required-modal').classList.remove('flex');
+        }
+
+        function continueToAccountAccess() {
+            closeAccountRequiredModal();
+            openAuthModal();
+        }
+
+        function handleProfileButtonClick() {
+            if (currentUser) {
+                openAccount();
+                return;
+            }
+            openAuthModal();
+        }
+
+        // --- VISIBILIDAD DE LA CUENTA Y OPCIONES DE ENVÍO ---
+        function updateAdminVisibility() {
+            const localShippingOpt = document.getElementById('label-local-shipping');
+            const nationalShippingOpt = document.getElementById('label-national-shipping');
+            const localShippingInput = document.querySelector('input[name="shippingType"][value="local"]');
+            const nationalShippingInput = document.querySelector('input[name="shippingType"][value="national"]');
+            const isAdmin = currentRole === 'admin';
+            ['nav-cart', 'nav-cart-mobile', 'nav-pqrs', 'nav-pqrs-mobile'].forEach(id => {
+                document.getElementById(id)?.classList.toggle('hidden', isAdmin);
+            });
+
+            const canShipNationally = currentRole === 'mayorista';
+            if (localShippingInput) localShippingInput.disabled = false;
+            if (nationalShippingInput) nationalShippingInput.disabled = !canShipNationally;
+            nationalShippingOpt?.classList.toggle('opacity-50', !canShipNationally);
+            nationalShippingOpt?.classList.toggle('cursor-not-allowed', !canShipNationally);
+            localShippingOpt?.classList.remove('opacity-50', 'cursor-not-allowed');
+
+            if (!canShipNationally && nationalShippingInput?.checked) {
+                localShippingInput.checked = true;
+            } else if (canShipNationally && !nationalShippingInput?.checked && !localShippingInput?.checked) {
+                nationalShippingInput.checked = true;
+            }
+            updateShippingCost();
+        }
+
+        // --- CAMBIO DE ROL (SIMULADOR) ---
+        function changeRole(role) {
+            if (!['minorista', 'mayorista', 'admin'].includes(role) ||
+                (role === 'admin' && currentUser?.role !== 'admin') ||
+                (currentUser && role !== currentUser.role)) {
+                showToast("Inicia sesión con una cuenta válida para cambiar el tipo de cuenta.", "error");
+                return;
+            }
+
+            currentRole = role;
+            const bannerText = document.getElementById('role-banner-text');
+            const roleLabel = document.getElementById('header-user-role');
+
+            if (role === 'minorista') {
+                bannerText.innerHTML = `Navegando como <strong>Cliente Minorista</strong>: Compras de comida rápida al detal y entregas en el Área Metropolitana de Medellín.`;
+                roleLabel.innerText = currentUser ? 'Cuenta minorista' : 'Visitante';
+                showCatalogSection('minorista');
+            } else if (role === 'mayorista') {
+                bannerText.innerHTML = `Navegando como <strong>Cliente Mayorista</strong>: Compras en volumen de empacados al vacío. Aplica mínimo de 10kg/unidades con despacho nacional.`;
+                roleLabel.innerText = 'Cuenta mayorista';
+                showCatalogSection('mayorista');
+            } else if (role === 'admin') {
+                bannerText.innerHTML = `Modo <strong>Administrador / Encargado</strong>: Tienes acceso completo para modificar inventario, añadir productos y asignar guías de despacho.`;
+                roleLabel.innerText = 'Administrador';
+                showCatalogSection('minorista');
+            }
+
+            updateAdminVisibility();
+            renderCatalogs();
+            if (!document.getElementById('tab-cart').classList.contains('hidden')) {
+                renderCart();
+            }
+        }
+
+        function showCatalogSection(category) {
+            if (!['minorista', 'mayorista'].includes(category)) return;
+            activeCatalogSection = category;
+            ['minorista', 'mayorista'].forEach(section => {
+                const isActive = section === category;
+                document.getElementById(`section-${section}`).classList.toggle('hidden', !isActive);
+                const tab = document.getElementById(`catalog-tab-${section}`);
+                tab.setAttribute('aria-selected', String(isActive));
+                tab.classList.toggle('bg-brand-700', isActive && section === 'minorista');
+                tab.classList.toggle('bg-amber-600', isActive && section === 'mayorista');
+                tab.classList.toggle('text-white', isActive);
+                tab.classList.toggle('bg-white', !isActive);
+                tab.classList.toggle('text-gray-600', !isActive);
+                tab.classList.toggle('border', !isActive);
+                tab.classList.toggle('border-gray-200', !isActive && section === 'minorista');
+                tab.classList.toggle('border-amber-200', !isActive && section === 'mayorista');
+            });
+        }
+
+        // --- RENDERIZAR CATÁLOGOS SEPARADOS ---
+        function renderCatalogs() {
+            const gridMinorista = document.getElementById('grid-minorista');
+            const gridMayorista = document.getElementById('grid-mayorista');
+            
+            gridMinorista.innerHTML = '';
+            gridMayorista.innerHTML = '';
+
+            const minoristas = products.filter(p => p.category === 'minorista');
+            const mayoristas = products.filter(p => p.category === 'mayorista');
+
+            // Renderizar Minoristas
+            minoristas.forEach(p => {
+                gridMinorista.appendChild(createProductCard(p));
+            });
+
+            // Renderizar Mayoristas
+            mayoristas.forEach(p => {
+                gridMayorista.appendChild(createProductCard(p));
+            });
+
+            lucide.createIcons();
+        }
+
+        function createProductCard(p) {
+            const isWholesale = p.category === 'mayorista';
+            const isOutOfStock = p.stock <= 0;
+
+            const card = document.createElement('div');
+            card.className = "bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden flex flex-col justify-between hover:shadow-md transition";
+            
+            card.innerHTML = `
+                <div>
+                    <div class="relative h-48 w-full overflow-hidden bg-gray-100">
+                        <img src="${p.image || 'https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=500&auto=format&fit=crop&q=60'}" alt="${p.name}" class="w-full h-full object-cover">
+                        <span class="absolute top-3 right-3 text-[10px] font-bold uppercase px-2 py-1 rounded-full shadow ${isWholesale ? 'bg-amber-500 text-white' : 'bg-brand-600 text-white'}">
+                            ${isWholesale ? 'Mayorista (Vacío)' : 'Minorista (Detal)'}
+                        </span>
+                        ${isOutOfStock ? '<div class="absolute inset-0 bg-black/60 flex items-center justify-center text-white font-bold text-sm">AGOTADO</div>' : ''}
+                    </div>
+                    <div class="p-4 space-y-2">
+                        <h3 class="font-bold text-gray-900 text-base leading-snug">${p.name}</h3>
+                        <p class="text-xs text-gray-500 line-clamp-2">${p.desc || 'Producto certificado de Ali Market.'}</p>
+                        
+                        <div class="flex items-center justify-between pt-2">
+                            <div>
+                                <span class="text-xs text-gray-400 block font-medium">Precio por ${p.unit}</span>
+                                <span class="text-lg font-extrabold text-brand-700">$${p.price.toLocaleString('es-CO')}</span>
+                            </div>
+                            <div class="text-right">
+                                <span class="text-[11px] font-semibold text-gray-500 block">Stock: ${p.stock}</span>
+                                ${p.minWholesale ? `<span class="text-[10px] text-amber-600 font-bold">Mín: ${p.minWholesale} ${p.unit}</span>` : ''}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="p-4 pt-0">
+                    <button onclick="addToCart(${p.id})" ${(isOutOfStock || currentRole === 'admin') ? 'disabled' : ''} class="w-full py-2.5 rounded-xl font-bold text-xs flex items-center justify-center gap-2 transition ${(isOutOfStock || currentRole === 'admin') ? 'bg-gray-200 text-gray-400 cursor-not-allowed' : 'bg-brand-700 hover:bg-brand-800 text-white shadow'}">
+                        <i data-lucide="shopping-cart" class="w-4 h-4"></i> Agregar al Carrito
+                    </button>
+                </div>
+            `;
+            return card;
+        }
+
+        // --- RESTRICCIÓN DE COMPRA POR TIPO DE USUARIO ---
+        function addToCart(productId) {
+            if (currentRole === 'admin') {
+                showToast('El administrador no puede realizar pedidos.', 'error');
+                return;
+            }
+            const product = products.find(p => p.id === productId);
+            if (!product) return;
+
+            // Validación estricta de roles vs categoría de producto
+            if (currentRole === 'minorista' && product.category === 'mayorista') {
+                showToast("Acceso restringido: Los clientes minoristas solo pueden comprar productos del catálogo minorista.", "error");
+                return;
+            }
+            if (currentRole === 'mayorista' && product.category === 'minorista') {
+                showToast("Acceso restringido: Los clientes mayoristas solo pueden comprar productos del catálogo mayorista.", "error");
+                return;
+            }
+            if (currentRole === 'admin') {
+                showToast("El rol de Administrador es de gestión. Cambia a cliente minorista o mayorista para simular compras.", "info");
+                return;
+            }
+
+            const existing = cart.find(item => item.product.id === productId);
+            let defaultAddQty = (product.category === 'mayorista' && product.minWholesale) ? product.minWholesale : 1;
+
+            if (existing) {
+                if (existing.quantity + 1 > product.stock) {
+                    showToast(`No hay suficiente stock. Disponibles: ${product.stock}`, 'error');
+                    return;
+                }
+                existing.quantity += 1;
+            } else {
+                if (defaultAddQty > product.stock) {
+                    showToast(`El stock disponible (${product.stock}) es menor al mínimo requerido (${defaultAddQty}).`, 'error');
+                    return;
+                }
+                cart.push({ product, quantity: defaultAddQty });
+            }
+
+            updateCartBadge();
+            showToast(`"${product.name}" agregado al carrito exitosamente.`, 'success');
+        }
+
+        function updateQuantity(productId, newQty) {
+            const item = cart.find(i => i.product.id === productId);
+            if (!item) return;
+
+            if (newQty <= 0) {
+                cart = cart.filter(i => i.product.id !== productId);
+            } else {
+                if (newQty > item.product.stock) {
+                    showToast(`Supera el inventario disponible (${item.product.stock})`, 'error');
+                    return;
+                }
+                item.quantity = newQty;
+            }
+
+            updateCartBadge();
+            renderCart();
+        }
+
+        function updateCartBadge() {
+            const totalCount = cart.reduce((acc, i) => acc + i.quantity, 0);
+            const badgeDesktop = document.getElementById('cart-badge');
+            const badgeMobile = document.getElementById('cart-badge-mobile');
+
+            if (totalCount > 0) {
+                badgeDesktop.innerText = totalCount;
+                badgeDesktop.classList.remove('hidden');
+                badgeMobile.innerText = totalCount;
+                badgeMobile.classList.remove('hidden');
+            } else {
+                badgeDesktop.classList.add('hidden');
+                badgeMobile.classList.add('hidden');
+            }
+        }
+
+        function renderCart() {
+            const container = document.getElementById('cart-items-container');
+            const emptyMsg = document.getElementById('empty-cart-msg');
+            const warningBox = document.getElementById('wholesale-warning-box');
+            const warningText = document.getElementById('wholesale-warning-text');
+            const submitBtn = document.getElementById('btn-submit-order');
+
+            container.innerHTML = '';
+
+            if (cart.length === 0) {
+                emptyMsg.classList.remove('hidden');
+                warningBox.classList.add('hidden');
+                updateShippingCost();
+                return;
+            }
+
+            emptyMsg.classList.add('hidden');
+            let hasWholesaleViolation = false;
+
+            cart.forEach(item => {
+                const p = item.product;
+                const itemSubtotal = p.price * item.quantity;
+                
+                // Validación de mínimo mayorista
+                const isBelowMin = p.category === 'mayorista' && p.minWholesale && item.quantity < p.minWholesale;
+                if (isBelowMin) hasWholesaleViolation = true;
+
+                const row = document.createElement('div');
+                row.className = "py-4 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4";
+                row.innerHTML = `
+                    <div class="flex items-center gap-3">
+                        <img src="${p.image || 'https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=500&auto=format&fit=crop&q=60'}" class="w-16 h-16 rounded-lg object-cover">
+                        <div>
+                            <h4 class="font-bold text-gray-900 text-sm">${p.name}</h4>
+                            <span class="text-xs text-gray-500 block">$${p.price.toLocaleString('es-CO')} por ${p.unit}</span>
+                            ${isBelowMin ? `<span class="text-xs text-red-600 font-bold flex items-center gap-1 mt-0.5"><i data-lucide="alert-circle" class="w-3.5 h-3.5"></i> Mínimo mayorista requerido: ${p.minWholesale} ${p.unit}</span>` : ''}
+                        </div>
+                    </div>
+
+                    <div class="flex items-center justify-between sm:justify-end w-full sm:w-auto gap-4">
+                        <div class="flex items-center border border-gray-300 rounded-lg">
+                            <button onclick="updateQuantity(${p.id}, ${item.quantity - 1})" class="px-2.5 py-1 text-gray-600 hover:bg-gray-100 font-bold">-</button>
+                            <span class="px-3 text-xs font-bold text-gray-800">${item.quantity}</span>
+                            <button onclick="updateQuantity(${p.id}, ${item.quantity + 1})" class="px-2.5 py-1 text-gray-600 hover:bg-gray-100 font-bold">+</button>
+                        </div>
+
+                        <div class="text-right">
+                            <span class="font-extrabold text-sm text-gray-900 block">$${itemSubtotal.toLocaleString('es-CO')}</span>
+                            <button onclick="updateQuantity(${p.id}, 0)" class="text-[11px] text-red-600 hover:underline">Eliminar</button>
+                        </div>
+                    </div>
+                `;
+                container.appendChild(row);
+            });
+
+            if (hasWholesaleViolation) {
+                warningBox.classList.remove('hidden');
+                warningText.innerText = "Uno o más productos mayoristas en el carrito no alcanzan el volumen mínimo obligatorio (10 kg o unidades). Debes ajustar las cantidades para continuar.";
+                submitBtn.disabled = true;
+                submitBtn.classList.add('opacity-50', 'cursor-not-allowed');
+            } else {
+                warningBox.classList.add('hidden');
+                submitBtn.disabled = false;
+                submitBtn.classList.remove('opacity-50', 'cursor-not-allowed');
+            }
+
+            lucide.createIcons();
+            updateShippingCost();
+        }
+
+        function updateShippingCost() {
+            const subtotal = cart.reduce((sum, item) => sum + (item.product.price * item.quantity), 0);
+            const shippingType = document.querySelector('input[name="shippingType"]:checked')?.value || 'local';
+            
+            let shippingFee = 0;
+            if (subtotal > 0) {
+                shippingFee = shippingType === 'local' ? 8000 : 25000;
+            }
+
+            document.getElementById('summary-subtotal').innerText = `$${subtotal.toLocaleString('es-CO')}`;
+            document.getElementById('summary-shipping').innerText = `$${shippingFee.toLocaleString('es-CO')}`;
+            document.getElementById('summary-total').innerText = `$${(subtotal + shippingFee).toLocaleString('es-CO')}`;
+        }
+
+        function loadAppData() {
+            const storedProducts = readStoredArray(PRODUCTS_STORAGE_KEY);
+            const storedOrders = readStoredArray(ORDERS_STORAGE_KEY);
+            const storedPQRS = readStoredArray(PQRS_STORAGE_KEY);
+            if (storedProducts) products = storedProducts;
+            if (storedOrders) orders = storedOrders;
+            if (storedPQRS) pqrsRequests = storedPQRS;
+        }
+
+        function readStoredArray(key) {
+            try {
+                const stored = localStorage.getItem(key);
+                if (!stored) return null;
+                const value = JSON.parse(stored);
+                if (!Array.isArray(value)) throw new Error(`El formato guardado en ${key} no es válido.`);
+                return value;
+            } catch (error) {
+                console.error(`No se pudieron cargar los datos (${key}):`, error);
+                showToast('No se pudieron cargar algunos datos guardados en este navegador.', 'error');
+                return null;
+            }
+        }
+
+        function saveAppData(key, data) {
+            try {
+                localStorage.setItem(key, JSON.stringify(data));
+                return true;
+            } catch (error) {
+                console.error(`No se pudieron guardar los datos (${key}):`, error);
+                showToast('No se pudieron guardar los cambios en el almacenamiento local.', 'error');
+                return false;
+            }
+        }
+
+        // --- PROCESAMIENTO DE PEDIDO Y LOGÍSTICA ---
+        function processOrder() {
+            if (currentRole === 'admin') {
+                showToast('El administrador no puede realizar pedidos.', 'error');
+                return;
+            }
+            if (!currentUser) {
+                showAccountRequiredModal('Para realizar un pedido, necesitas iniciar sesión o crear una cuenta.');
+                return;
+            }
+            if (cart.length === 0) return;
+
+            const address = document.getElementById('delivery-address').value.trim();
+            if (!address) {
+                showToast("Por favor ingresa la dirección de entrega.", 'error');
+                return;
+            }
+
+            const paymentMethod = document.getElementById('payment-method').value;
+            const shippingType = document.querySelector('input[name="shippingType"]:checked').value;
+            if (shippingType === 'national' && currentRole !== 'mayorista') {
+                showToast("El despacho nacional está disponible únicamente para clientes mayoristas.", 'error');
+                return;
+            }
+
+            const previousStock = products.map(product => ({ id: product.id, stock: product.stock }));
+            cart.forEach(item => {
+                const p = products.find(prod => prod.id === item.product.id);
+                if (p) {
+                    p.stock -= item.quantity;
+                }
+            });
+
+            const newOrderId = `ORD-${Date.now()}`;
+            const order = {
+                id: newOrderId,
+                customer: currentUser ? currentUser.name : (currentRole === 'mayorista' ? 'Cliente Mayorista S.A.S' : 'Cliente Minorista'),
+                userEmail: currentUser?.email || '',
+                type: currentRole,
+                destination: address,
+                shippingType,
+                paymentMethod,
+                items: cart.map(item => ({ name: item.product.name, quantity: item.quantity, unitPrice: item.product.price })),
+                total: cart.reduce((sum, item) => sum + item.product.price * item.quantity, 0),
+                createdAt: new Date().toISOString(),
+                status: 'En preparación',
+                courier: shippingType === 'local' ? 'Domiciliario Propio' : 'Pendiente Asignar',
+                tracking: shippingType === 'local' ? 'N/A Domicilio Local' : 'Sin Guía'
+            };
+            const previousOrders = orders;
+            const updatedProducts = [...products];
+            orders = [order, ...orders];
+            if (!saveAppData(PRODUCTS_STORAGE_KEY, products)) {
+                orders = previousOrders;
+                products.forEach((product, index) => product.stock = updatedProducts[index].stock);
+                return;
+            }
+            if (!saveAppData(ORDERS_STORAGE_KEY, orders)) {
+                orders = previousOrders;
+                products.forEach((product, index) => product.stock = previousStock[index].stock);
+                saveAppData(PRODUCTS_STORAGE_KEY, products);
+                return;
+            }
+
+            showToast(`¡Pedido ${newOrderId} confirmado con éxito! Pago registrado (${paymentMethod}).`, 'success');
+            cart = [];
+            updateCartBadge();
+            renderCatalogs();
+            if (currentUser) renderAccount();
+            refreshAccountChangeAlert();
+            switchTab('catalog');
+        }
+
+        // --- GESTIÓN DE PQRS ---
+        function handlePQRSSubmit(e) {
+            e.preventDefault();
+            if (currentRole === 'admin') {
+                showToast('El administrador no puede crear PQRS.', 'error');
+                return;
+            }
+            if (!currentUser) {
+                showAccountRequiredModal('Para enviar una PQRS, necesitas iniciar sesión o crear una cuenta.');
+                return;
+            }
+            const name = currentUser.name || [currentUser.firstName, currentUser.lastName].filter(Boolean).join(' ');
+            const email = currentUser.email;
+            const doc = currentUser.doc;
+            const type = document.getElementById('pqrs-type').value;
+            const message = document.getElementById('pqrs-message').value.trim();
+
+            if (!name || !email || !doc) {
+                showToast('Completa los datos de tu cuenta antes de enviar una PQRS.', 'error');
+                return;
+            }
+            document.getElementById('sim-from').innerText = `${name} <${email}>`;
+            document.getElementById('sim-type').innerText = type;
+            document.getElementById('sim-doc').innerText = doc;
+            document.getElementById('sim-body').innerText = `"${message}"`;
+
+            const request = {
+                id: `PQRS-${Date.now()}`,
+                name,
+                email,
+                userEmail: email,
+                doc,
+                type,
+                message,
+                response: '',
+                status: 'Pendiente',
+                createdAt: new Date().toISOString()
+            };
+            const updatedRequests = [request, ...pqrsRequests];
+            if (!saveAppData(PQRS_STORAGE_KEY, updatedRequests)) return;
+            pqrsRequests = updatedRequests;
+            refreshAccountChangeAlert();
+            document.getElementById('email-preview-card').classList.remove('hidden');
+            showToast('PQRS registrada correctamente.', 'success');
+            document.getElementById('pqrs-form').reset();
+            syncPQRSAccountFields();
+            if (currentUser) renderAccount();
+            renderAdminPQRS();
+        }
+
+        function syncPQRSAccountFields() {
+            document.getElementById('pqrs-name').value = currentUser
+                ? currentUser.name || [currentUser.firstName, currentUser.lastName].filter(Boolean).join(' ')
+                : '';
+            document.getElementById('pqrs-email').value = currentUser?.email || '';
+            document.getElementById('pqrs-doc').value = currentUser?.doc || '';
+        }
+
+        // --- ADMINISTRACIÓN ---
+        function renderAdminTables() {
+            if (currentRole !== 'admin') return;
+            // Tabla 1: Inventario
+            const invBody = document.getElementById('admin-inventory-table');
+            invBody.innerHTML = '';
+
+            products.forEach(p => {
+                const tr = document.createElement('tr');
+                tr.className = "hover:bg-gray-50";
+                tr.innerHTML = `
+                    <td class="p-3 font-semibold text-gray-900">${escapeHTML(p.name)}</td>
+                    <td class="p-3 uppercase text-[10px] font-bold ${p.category === 'mayorista' ? 'text-amber-600' : 'text-brand-600'}">${escapeHTML(p.category)}</td>
+                    <td class="p-3">$${Number(p.price).toLocaleString('es-CO')} / ${escapeHTML(p.unit)}</td>
+                    <td class="p-3 font-bold ${p.stock < 10 ? 'text-red-600' : 'text-gray-800'}">${p.stock} ${escapeHTML(p.unit)}s</td>
+                    <td class="p-3 text-right">
+                        <input type="number" id="stock-input-${p.id}" value="${p.stock}" min="0" class="w-16 p-1 border rounded text-center text-xs">
+                        <button onclick="updateStockAdmin(${p.id})" class="ml-1 px-2 py-1 bg-brand-700 text-white font-bold rounded hover:bg-brand-800">
+                            Guardar
+                        </button>
+                        <button onclick="deleteProductAdmin(${p.id})" class="ml-1 px-2 py-1 bg-red-700 text-white font-bold rounded hover:bg-red-800">
+                            Eliminar
+                        </button>
+                    </td>
+                `;
+                invBody.appendChild(tr);
+            });
+
+            // Tabla 2: Pedidos y Guías Nacionales
+            const ordBody = document.getElementById('admin-orders-table');
+            ordBody.innerHTML = '';
+            const changedOrderIds = getChangedAccountRecordIds('orders');
+
+            orders.forEach(o => {
+                const tr = document.createElement('tr');
+                tr.className = `hover:bg-gray-50 ${changedOrderIds.has(String(o.id)) ? 'bg-amber-50 outline outline-2 outline-amber-400' : ''}`;
+                if (changedOrderIds.has(String(o.id))) {
+                    tr.title = 'Este pedido tiene cambios sin revisar. Haz clic para marcarlos como vistos.';
+                    makeAccountRecordViewable(tr, 'orders', o.id);
+                }
+                tr.innerHTML = `
+                    <td class="p-3 font-bold text-brand-700">${escapeHTML(o.id)}</td>
+                    <td class="p-3">${escapeHTML(o.customer)} (${escapeHTML(o.type)})</td>
+                    <td class="p-3">${escapeHTML(o.destination)}</td>
+                    <td class="p-3">
+                        <select id="status-${o.id}" class="p-1 border rounded text-xs">
+                            ${['En preparación', 'Enviado', 'Entregado', 'Cancelado', 'Pagado'].map(status => `<option value="${status}" ${o.status === status ? 'selected' : ''}>${status}</option>`).join('')}
+                        </select>
+                    </td>
+                    <td class="p-3">
+                        <input type="text" id="courier-${o.id}" value="${escapeHTML(o.courier)}" class="w-24 p-1 border rounded text-xs" placeholder="Transportadora">
+                    </td>
+                    <td class="p-3">
+                        <input type="text" id="tracking-${o.id}" value="${escapeHTML(o.tracking)}" class="w-28 p-1 border rounded text-xs" placeholder="N° Guía">
+                    </td>
+                    <td class="p-3 text-right">
+                        <button onclick="updateOrderTracking('${o.id}')" class="px-2 py-1 bg-gray-800 text-white font-bold rounded text-xs hover:bg-black">
+                            Actualizar envío
+                        </button>
+                    </td>
+                `;
+                ordBody.appendChild(tr);
+            });
+        }
+
+        function updateStockAdmin(productId) {
+            if (currentRole !== 'admin') {
+                showToast('Acceso denegado: se requiere rol de administrador.', 'error');
+                return;
+            }
+            const input = document.getElementById(`stock-input-${productId}`);
+            const newStock = parseInt(input.value);
+            if (isNaN(newStock) || newStock < 0) return;
+
+            const p = products.find(item => item.id === productId);
+            if (p) {
+                const previousStock = p.stock;
+                p.stock = newStock;
+                if (!saveAppData(PRODUCTS_STORAGE_KEY, products)) {
+                    p.stock = previousStock;
+                    return;
+                }
+                showToast(`Stock de "${p.name}" actualizado a ${newStock} ${p.unit}`, 'success');
+                renderCatalogs();
+                renderAdminTables();
+            }
+        }
+
+        function deleteProductAdmin(productId) {
+            if (currentRole !== 'admin') {
+                showToast('Acceso denegado: se requiere rol de administrador.', 'error');
+                return;
+            }
+            const product = products.find(item => item.id === productId);
+            if (!product) return;
+            if (!window.confirm(`¿Eliminar "${product.name}" del catálogo?`)) return;
+
+            const updatedProducts = products.filter(item => item.id !== productId);
+            if (!saveAppData(PRODUCTS_STORAGE_KEY, updatedProducts)) return;
+            products = updatedProducts;
+            cart = cart.filter(item => item.product.id !== productId);
+            updateCartBadge();
+            renderCatalogs();
+            renderAdminTables();
+            showToast(`Producto "${product.name}" eliminado del catálogo.`, 'success');
+        }
+
+        function updateOrderTracking(orderId) {
+            if (currentRole !== 'admin') {
+                showToast('Acceso denegado: se requiere rol de administrador.', 'error');
+                return;
+            }
+            const courier = document.getElementById(`courier-${orderId}`).value;
+            const tracking = document.getElementById(`tracking-${orderId}`).value;
+            const status = document.getElementById(`status-${orderId}`).value;
+
+            const order = orders.find(o => o.id === orderId);
+            if (order) {
+                const previousValues = { courier: order.courier, tracking: order.tracking, status: order.status };
+                order.courier = courier;
+                order.tracking = tracking;
+                order.status = status;
+                if (!saveAppData(ORDERS_STORAGE_KEY, orders)) {
+                    Object.assign(order, previousValues);
+                    return;
+                }
+                showToast(`Pedido ${orderId} actualizado.`, 'success');
+                refreshAccountChangeAlert();
+                renderAdminTables();
+                renderAccount();
+            }
+        }
+
+        function renderAccount() {
+            if (!currentUser) return;
+            const selectedSection = document.querySelector('.account-subnav-button.bg-brand-700')?.dataset.section;
+            document.getElementById('account-display-name').innerText = currentUser.name;
+            document.getElementById('account-display-role').innerText = currentUser.role === 'admin'
+                ? 'Administrador'
+                : currentUser.role === 'mayorista' ? 'Mayorista' : 'Minorista';
+            document.getElementById('account-display-doc-type').innerText = currentUser.documentType === 'nit'
+                ? 'NIT' : 'Cédula de ciudadanía';
+            document.getElementById('account-display-doc').innerText = currentUser.doc || '—';
+            document.getElementById('account-display-email').innerText = currentUser.email;
+            document.getElementById('account-display-phone').innerText = currentUser.phone || 'No registrado';
+
+            const sections = currentUser.role === 'admin'
+                ? [
+                    ['admin-orders', 'Administración de pedidos'],
+                    ['admin-pqrs', 'Administración de PQRS'],
+                    ['admin-inventory', 'Administración de inventario']
+                ]
+                : [
+                    ['profile', 'Datos de cuenta'],
+                    ['orders', 'Seguimiento de pedidos'],
+                    ['pqrs', 'Seguimiento de PQRS']
+                ];
+            const nav = document.getElementById('account-subnav');
+            nav.innerHTML = '';
+            sections.forEach(([id, label]) => {
+                const button = document.createElement('button');
+                button.type = 'button';
+                button.dataset.section = id;
+                button.className = 'account-subnav-button px-4 py-2 rounded-lg text-xs font-semibold bg-white text-gray-600 border border-gray-200 hover:border-brand-500 inline-flex items-center gap-2';
+                const buttonLabel = document.createElement('span');
+                buttonLabel.innerText = label;
+                button.appendChild(buttonLabel);
+                if (['orders', 'admin-orders'].includes(id)) {
+                    button.appendChild(createAccountSectionAlert('orders'));
+                } else if (['pqrs', 'admin-pqrs'].includes(id)) {
+                    button.appendChild(createAccountSectionAlert('pqrs'));
+                }
+                button.addEventListener('click', () => switchAccountSection(id));
+                nav.appendChild(button);
+            });
+
+            renderAccountOrders();
+            renderAccountPQRS();
+            if (currentUser.role === 'admin') {
+                renderAdminTables();
+                renderAdminPQRS();
+            }
+            const defaultSection = currentUser.role === 'admin' ? 'admin-orders' : 'profile';
+            const sectionExists = sections.some(([id]) => id === selectedSection);
+            switchAccountSection(sectionExists ? selectedSection : defaultSection);
+            refreshAccountChangeAlert();
+        }
+
+        function switchAccountSection(sectionId) {
+            if (!currentUser) return;
+            const allowedSections = currentUser.role === 'admin'
+                ? ['admin-orders', 'admin-pqrs', 'admin-inventory']
+                : ['profile', 'orders', 'pqrs'];
+            if (!allowedSections.includes(sectionId)) {
+                showToast('No tienes permiso para acceder a esta sección.', 'error');
+                return;
+            }
+            document.querySelectorAll('.account-subsection').forEach(section => section.classList.add('hidden'));
+            if (sectionId === 'admin-inventory') {
+                document.getElementById('account-admin-inventory-form').classList.remove('hidden');
+                document.getElementById('account-admin-inventory').classList.remove('hidden');
+            } else {
+                const section = document.getElementById(`account-${sectionId}`);
+                if (section) section.classList.remove('hidden');
+            }
+            document.querySelectorAll('.account-subnav-button').forEach(button => {
+                const isActive = button.dataset.section === sectionId;
+                button.classList.toggle('bg-brand-700', isActive);
+                button.classList.toggle('text-white', isActive);
+                button.classList.toggle('border-brand-700', isActive);
+                button.classList.toggle('bg-white', !isActive);
+                button.classList.toggle('text-gray-600', !isActive);
+                button.classList.toggle('border-gray-200', !isActive);
+            });
+            if (sectionId.startsWith('admin-')) {
+                renderAdminTables();
+                renderAdminPQRS();
+            }
+            lucide.createIcons();
+        }
+
+        function openAccountEditModal() {
+            if (!currentUser) return;
+            clearAccountEditError();
+            document.getElementById('account-edit-name').value = currentUser.name || '';
+            document.getElementById('account-edit-doc-type').value = currentUser.documentType || 'cedula';
+            document.getElementById('account-edit-doc').value = currentUser.doc || '';
+            document.getElementById('account-edit-phone').value = currentUser.phone || '';
+            document.getElementById('account-edit-password').value = '';
+            document.getElementById('account-edit-modal').classList.remove('hidden');
+            document.getElementById('account-edit-modal').classList.add('flex');
+            lucide.createIcons();
+        }
+
+        function closeAccountEditModal() {
+            document.getElementById('account-edit-modal').classList.add('hidden');
+            document.getElementById('account-edit-modal').classList.remove('flex');
+            document.getElementById('account-edit-form').reset();
+            clearAccountEditError();
+        }
+
+        function saveAccountDetails(event) {
+            event.preventDefault();
+            clearAccountEditError();
+            const form = event.currentTarget;
+            if (!currentUser || !form.checkValidity()) {
+                showAccountEditError('Completa todos los campos para guardar los cambios.');
+                return;
+            }
+
+            const account = registeredUsers.find(user => user.email === currentUser.email);
+            if (!account) {
+                showAccountEditError('No se encontró la cuenta para guardar los datos.');
+                return;
+            }
+
+            const name = document.getElementById('account-edit-name').value.trim();
+            const doc = document.getElementById('account-edit-doc').value.trim();
+            const documentType = document.getElementById('account-edit-doc-type').value;
+            const phone = document.getElementById('account-edit-phone').value.trim();
+            const password = document.getElementById('account-edit-password').value;
+
+            if (!name || !doc || !phone) {
+                showAccountEditError('El nombre, documento y número de contacto son obligatorios.');
+                return;
+            }
+            if (password !== account.password) {
+                showAccountEditError('La contraseña ingresada es incorrecta.');
+                return;
+            }
+            if (registeredUsers.some(user => user.email !== account.email && user.doc === doc)) {
+                showAccountEditError('Ya existe una cuenta registrada con ese documento.');
+                return;
+            }
+
+            const nameParts = name.split(/\s+/);
+            const updatedAccount = {
+                ...account,
+                name,
+                firstName: nameParts.shift(),
+                lastName: nameParts.join(' '),
+                documentType,
+                doc,
+                phone
+            };
+            const updatedUsers = registeredUsers.map(user => user.email === account.email ? updatedAccount : user);
+            if (!saveRegisteredUsers(updatedUsers)) {
+                showAccountEditError('No se pudieron guardar los cambios. Inténtalo de nuevo.');
+                return;
+            }
+
+            registeredUsers = updatedUsers;
+            currentUser = updatedAccount;
+            document.getElementById('auth-btn-text').innerText = updatedAccount.firstName;
+            syncPQRSAccountFields();
+            renderAccount();
+            closeAccountEditModal();
+            showToast('Datos de cuenta actualizados correctamente.', 'success');
+        }
+
+        function showAccountEditError(message) {
+            const error = document.getElementById('account-edit-error');
+            error.innerText = message;
+            error.classList.remove('hidden');
+        }
+
+        function clearAccountEditError() {
+            const error = document.getElementById('account-edit-error');
+            if (!error) return;
+            error.innerText = '';
+            error.classList.add('hidden');
+        }
+
+        function renderAccountOrders() {
+            const container = document.getElementById('account-orders-list');
+            if (!container || !currentUser) return;
+            const userOrders = orders.filter(order => order.userEmail?.toLowerCase() === currentUser.email.toLowerCase());
+            const changedOrderIds = getChangedAccountRecordIds('orders');
+            const inProgress = userOrders.filter(order => ['En preparación', 'Enviado', 'En gestión'].includes(order.status));
+            const history = userOrders.filter(order => !inProgress.includes(order));
+            container.innerHTML = '';
+            if (userOrders.length === 0) {
+                container.innerHTML = '<p class="text-sm text-gray-500">Aún no tienes pedidos asociados a esta cuenta.</p>';
+                return;
+            }
+
+            [[inProgress, 'Pedidos en curso'], [history, 'Historial de pedidos']].forEach(([list, heading]) => {
+                if (!list.length) return;
+                const group = document.createElement('div');
+                group.className = 'space-y-3';
+                group.innerHTML = `<h4 class="font-semibold text-gray-800">${heading}</h4>`;
+                list.forEach(order => {
+                    const card = document.createElement('article');
+                    const hasChanges = changedOrderIds.has(String(order.id));
+                    card.className = `border rounded-xl p-4 text-sm space-y-1 ${hasChanges ? 'border-amber-400 bg-amber-50 ring-1 ring-amber-300' : 'border-gray-200'}`;
+                    if (hasChanges) {
+                        card.title = 'Este pedido tiene cambios sin revisar. Haz clic para marcarlo como visto.';
+                        makeAccountRecordViewable(card, 'orders', order.id);
+                    }
+                    const items = (order.items || []).map(item => `${item.quantity} × ${item.name}`).join(', ');
+                    card.innerHTML = `
+                        <div class="flex flex-wrap justify-between gap-2"><strong>${escapeHTML(order.id)}</strong><span>${escapeHTML(order.status)}</span></div>
+                        <p class="text-gray-600">${formatDate(order.createdAt)} · ${escapeHTML(order.destination)}</p>
+                        ${items ? `<p class="text-gray-600">${escapeHTML(items)}</p>` : ''}
+                        ${order.total ? `<p class="font-semibold">Total: $${Number(order.total).toLocaleString('es-CO')}</p>` : ''}
+                        <p class="text-gray-600">Transportadora: ${escapeHTML(order.courier || 'Pendiente')} · Guía: ${escapeHTML(order.tracking || 'Pendiente')}</p>
+                    `;
+                    group.appendChild(card);
+                });
+                container.appendChild(group);
+            });
+        }
+
+        function renderAccountPQRS() {
+            const container = document.getElementById('account-pqrs-list');
+            if (!container || !currentUser) return;
+            const userRequests = pqrsRequests.filter(request => request.userEmail?.toLowerCase() === currentUser.email.toLowerCase());
+            const changedPQRSIds = getChangedAccountRecordIds('pqrs');
+            container.innerHTML = '';
+            if (userRequests.length === 0) {
+                container.innerHTML = '<p class="text-sm text-gray-500">Aún no tienes PQRS asociadas a esta cuenta.</p>';
+                return;
+            }
+            userRequests.forEach(request => {
+                const card = document.createElement('article');
+                const hasChanges = changedPQRSIds.has(String(request.id));
+                card.className = `border rounded-xl p-4 space-y-2 ${hasChanges ? 'border-amber-400 bg-amber-50 ring-1 ring-amber-300' : 'border-gray-200'}`;
+                if (hasChanges) {
+                    card.title = 'Esta PQRS tiene cambios sin revisar. Haz clic para marcarla como vista.';
+                    makeAccountRecordViewable(card, 'pqrs', request.id);
+                }
+                card.innerHTML = `
+                    <div class="flex flex-wrap justify-between gap-2"><strong>${escapeHTML(request.type)} · ${escapeHTML(request.id)}</strong><span class="text-xs text-gray-500">${escapeHTML(request.status)} · ${formatDate(request.createdAt)}</span></div>
+                    <p class="text-sm whitespace-pre-wrap">${escapeHTML(request.message)}</p>
+                    <div class="rounded-lg bg-gray-50 p-3 text-sm"><strong>Respuesta:</strong> ${request.response ? escapeHTML(request.response) : '<span class="text-gray-500">Aún no hay respuesta.</span>'}</div>
+                `;
+                container.appendChild(card);
+            });
+        }
+
+        function escapeHTML(value) {
+            return String(value ?? '').replace(/[&<>"']/g, character => ({
+                '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'
+            })[character]);
+        }
+
+        function formatDate(value) {
+            if (!value) return 'Fecha no disponible';
+            const date = new Date(value);
+            return Number.isNaN(date.getTime()) ? 'Fecha no disponible' : date.toLocaleString('es-CO');
+        }
+
+        // Formulario para añadir nuevo producto
+        function handleAddNewProduct(e) {
+            e.preventDefault();
+            if (currentRole !== 'admin') {
+                showToast('Acceso denegado: se requiere rol de administrador.', 'error');
+                return;
+            }
+            const name = document.getElementById('new-prod-name').value;
+            const category = document.getElementById('new-prod-category').value;
+            const price = parseFloat(document.getElementById('new-prod-price').value);
+            const stock = parseInt(document.getElementById('new-prod-stock').value);
+            const unit = document.getElementById('new-prod-unit').value;
+            const minWholesale = parseInt(document.getElementById('new-prod-min').value) || 10;
+            const image = document.getElementById('new-prod-img').value;
+            const desc = document.getElementById('new-prod-desc').value;
+
+            const newId = products.length > 0 ? Math.max(...products.map(p => p.id)) + 1 : 1;
+
+            products.push({
+                id: newId,
+                name,
+                category,
+                price,
+                unit,
+                stock,
+                minWholesale: category === 'mayorista' ? minWholesale : undefined,
+                image,
+                desc
+            });
+
+            if (!saveAppData(PRODUCTS_STORAGE_KEY, products)) {
+                products.pop();
+                return;
+            }
+            showToast(`Producto "${name}" añadido con éxito al catálogo ${category}.`, 'success');
+            e.target.reset();
+            renderCatalogs();
+            renderAdminTables();
+        }
+
+        function renderAdminPQRS() {
+            if (currentRole !== 'admin') return;
+            const container = document.getElementById('admin-pqrs-list');
+            if (!container) return;
+            container.innerHTML = '';
+            if (pqrsRequests.length === 0) {
+                container.innerHTML = '<p class="text-sm text-gray-500">No hay PQRS registradas.</p>';
+                return;
+            }
+
+            const changedPQRSIds = getChangedAccountRecordIds('pqrs');
+            pqrsRequests.forEach(request => {
+                const requestKey = encodeURIComponent(request.id);
+                const card = document.createElement('article');
+                const hasChanges = changedPQRSIds.has(String(request.id));
+                card.className = `border rounded-xl p-4 space-y-3 ${hasChanges ? 'border-amber-400 bg-amber-50 ring-1 ring-amber-300' : 'border-gray-200'}`;
+                if (hasChanges) {
+                    card.title = 'Esta PQRS tiene cambios sin revisar. Haz clic para marcarla como vista.';
+                    makeAccountRecordViewable(card, 'pqrs', request.id);
+                }
+                card.innerHTML = `
+                    <div class="flex flex-wrap justify-between gap-2 text-sm">
+                        <strong>${escapeHTML(request.type)} · ${escapeHTML(request.name)}</strong>
+                        <span class="text-xs text-gray-500">${formatDate(request.createdAt)} · ${escapeHTML(request.status)}</span>
+                    </div>
+                    <p class="text-xs text-gray-600">${escapeHTML(request.email)} · Documento: ${escapeHTML(request.doc)}</p>
+                    <p class="text-sm whitespace-pre-wrap">${escapeHTML(request.message)}</p>
+                    <label class="block text-xs font-semibold text-gray-700">Respuesta
+                        <textarea id="pqrs-response-${requestKey}" rows="2" class="mt-1 w-full text-sm p-2.5 border border-gray-300 rounded-lg">${escapeHTML(request.response || '')}</textarea>
+                    </label>
+                    <div class="flex flex-wrap items-center justify-between gap-2">
+                        <select id="pqrs-status-${requestKey}" class="text-xs p-2 border border-gray-300 rounded-lg">
+                            ${['Pendiente', 'En gestión', 'Respondida'].map(status => `<option value="${status}" ${request.status === status ? 'selected' : ''}>${status}</option>`).join('')}
+                        </select>
+                    </div>
+                `;
+                const actions = document.createElement('div');
+                actions.className = 'flex flex-wrap gap-2';
+                [
+                    ['Guardar respuesta', 'bg-brand-700 hover:bg-brand-800', () => savePQRSResponse(request.id)],
+                    ['Eliminar', 'bg-red-700 hover:bg-red-800', () => deletePQRS(request.id)]
+                ].forEach(([label, classes, handler]) => {
+                    const button = document.createElement('button');
+                    button.type = 'button';
+                    button.className = `px-3 py-2 ${classes} text-white text-xs font-bold rounded-lg`;
+                    button.innerText = label;
+                    button.addEventListener('click', handler);
+                    actions.appendChild(button);
+                });
+                card.appendChild(actions);
+                container.appendChild(card);
+            });
+        }
+
+        function savePQRSResponse(requestId) {
+            if (currentRole !== 'admin') {
+                showToast('Acceso denegado: se requiere rol de administrador.', 'error');
+                return;
+            }
+            const requestKey = encodeURIComponent(requestId);
+            const updatedRequests = pqrsRequests.map(item => item.id === requestId
+                ? {
+                    ...item,
+                    response: document.getElementById(`pqrs-response-${requestKey}`).value.trim(),
+                    status: document.getElementById(`pqrs-status-${requestKey}`).value
+                }
+                : item);
+            if (!saveAppData(PQRS_STORAGE_KEY, updatedRequests)) return;
+            pqrsRequests = updatedRequests;
+            refreshAccountChangeAlert();
+            showToast('Respuesta y estado de la PQRS guardados.', 'success');
+            renderAdminPQRS();
+            renderAccount();
+        }
+
+        function deletePQRS(requestId) {
+            if (currentRole !== 'admin') {
+                showToast('Acceso denegado: se requiere rol de administrador.', 'error');
+                return;
+            }
+            const request = pqrsRequests.find(item => item.id === requestId);
+            if (!request) {
+                showToast('No se encontró la PQRS que deseas eliminar.', 'error');
+                return;
+            }
+            pendingPQRSDeleteId = requestId;
+            document.getElementById('pqrs-delete-message').innerText =
+                `¿Seguro que deseas eliminar la PQRS de ${request.name} (${request.type})? Esta acción no se puede deshacer.`;
+            document.getElementById('pqrs-delete-modal').classList.remove('hidden');
+            document.getElementById('pqrs-delete-modal').classList.add('flex');
+            lucide.createIcons();
+        }
+
+        function closePQRSDeleteModal() {
+            pendingPQRSDeleteId = null;
+            document.getElementById('pqrs-delete-modal').classList.add('hidden');
+            document.getElementById('pqrs-delete-modal').classList.remove('flex');
+        }
+
+        function confirmDeletePQRS() {
+            if (currentRole !== 'admin') {
+                showToast('Acceso denegado: se requiere rol de administrador.', 'error');
+                closePQRSDeleteModal();
+                return;
+            }
+            if (!pendingPQRSDeleteId) return;
+            const updatedRequests = pqrsRequests.filter(request => request.id !== pendingPQRSDeleteId);
+            if (updatedRequests.length === pqrsRequests.length) {
+                showToast('No se encontró la PQRS que deseas eliminar.', 'error');
+                closePQRSDeleteModal();
+                return;
+            }
+            if (!saveAppData(PQRS_STORAGE_KEY, updatedRequests)) return;
+            pqrsRequests = updatedRequests;
+            refreshAccountChangeAlert();
+            closePQRSDeleteModal();
+            showToast('PQRS eliminada.', 'success');
+            renderAdminPQRS();
+            renderAccountPQRS();
+        }
+
+        // --- AUTH & MODAL SYSTEM ---
+        function initializeAuth() {
+            try {
+                const storedUsers = localStorage.getItem(USERS_STORAGE_KEY);
+                registeredUsers = storedUsers ? JSON.parse(storedUsers) : [];
+                if (!Array.isArray(registeredUsers)) {
+                    throw new Error('El formato de las cuentas guardadas no es válido.');
+                }
+
+                if (!registeredUsers.some(user => user.email === 'admin@alimarket.com.co')) {
+                    registeredUsers.push({
+                        role: 'admin',
+                        documentType: 'nit',
+                        doc: '900123456-1',
+                        firstName: 'Administrador',
+                        lastName: 'Ali Market',
+                        name: 'Administrador Ali Market',
+                        email: 'admin@alimarket.com.co',
+                        password: 'AliAdmin2026!'
+                    });
+                    localStorage.setItem(USERS_STORAGE_KEY, JSON.stringify(registeredUsers));
+                }
+
+                const sessionEmail = localStorage.getItem(SESSION_STORAGE_KEY);
+                const user = registeredUsers.find(account => account.email === sessionEmail);
+                if (user) setAuthenticatedUser(user, false);
+            } catch (error) {
+                console.error('No se pudieron cargar las cuentas guardadas:', error);
+                showToast('No se pudieron cargar las cuentas guardadas del navegador.', 'error');
+                registeredUsers = [];
+            }
+        }
+
+        function showAuthForm(formName) {
+            const isLogin = formName === 'login';
+            clearLoginError();
+            clearRegistrationError();
+            document.getElementById('login-form').classList.toggle('hidden', !isLogin);
+            document.getElementById('register-form').classList.toggle('hidden', isLogin);
+            document.getElementById('login-tab').classList.toggle('border-brand-700', isLogin);
+            document.getElementById('login-tab').classList.toggle('text-brand-700', isLogin);
+            document.getElementById('login-tab').classList.toggle('border-transparent', !isLogin);
+            document.getElementById('login-tab').classList.toggle('text-gray-500', !isLogin);
+            document.getElementById('register-tab').classList.toggle('border-brand-700', !isLogin);
+            document.getElementById('register-tab').classList.toggle('text-brand-700', !isLogin);
+            document.getElementById('register-tab').classList.toggle('border-transparent', isLogin);
+            document.getElementById('register-tab').classList.toggle('text-gray-500', isLogin);
+            document.getElementById('modal-title').innerText = isLogin ? 'Iniciar sesión' : 'Crear una cuenta';
+        }
+
+        function openAuthModal() {
+            if (currentUser) {
+                openAccount();
+                return;
+            }
+            clearLoginError();
+            document.getElementById('auth-forms').classList.remove('hidden');
+            document.getElementById('auth-session-panel').classList.add('hidden');
+            showAuthForm('login');
+            document.getElementById('auth-modal').classList.remove('hidden');
+            document.getElementById('auth-modal').classList.add('flex');
+            lucide.createIcons();
+        }
+
+        function closeAuthModal() {
+            document.getElementById('auth-modal').classList.add('hidden');
+            document.getElementById('auth-modal').classList.remove('flex');
+        }
+
+        function handleRegisterSubmit(e) {
+            e.preventDefault();
+            clearRegistrationError();
+            if (!e.currentTarget.checkValidity()) {
+                showRegistrationError('Revisa los datos: completa todos los campos, ingresa un correo válido y usa una contraseña de al menos 8 caracteres.');
+                return;
+            }
+            const firstName = document.getElementById('reg-first-name').value.trim();
+            const lastName = document.getElementById('reg-last-name').value.trim();
+            const doc = document.getElementById('reg-doc').value.trim();
+            const documentType = document.getElementById('reg-doc-type').value;
+            const email = document.getElementById('reg-email').value.trim().toLowerCase();
+            const confirmEmail = document.getElementById('reg-email-confirm').value.trim().toLowerCase();
+            const password = document.getElementById('reg-password').value;
+            const confirmPassword = document.getElementById('reg-password-confirm').value;
+            const role = document.getElementById('reg-role').value;
+
+            if (email !== confirmEmail) {
+                showRegistrationError('Los correos electrónicos no coinciden. Verifica ambos campos.');
+                return;
+            }
+            if (password !== confirmPassword) {
+                showRegistrationError('Las contraseñas no coinciden. Verifica ambos campos.');
+                return;
+            }
+            if (registeredUsers.some(user => user.email === email)) {
+                showRegistrationError('Ya existe una cuenta registrada con ese correo.');
+                return;
+            }
+            if (registeredUsers.some(user => user.doc === doc)) {
+                showRegistrationError('Ya existe una cuenta registrada con ese documento.');
+                return;
+            }
+
+            const user = {
+                role,
+                documentType,
+                doc,
+                firstName,
+                lastName,
+                name: `${firstName} ${lastName}`,
+                email,
+                password
+            };
+            const updatedUsers = [...registeredUsers, user];
+            if (!saveRegisteredUsers(updatedUsers)) return;
+
+            registeredUsers = updatedUsers;
+            document.getElementById('login-email').value = email;
+            document.getElementById('register-form').reset();
+            clearRegistrationError();
+            showAuthForm('login');
+            showToast('Cuenta creada. Inicia sesión con tu correo y contraseña.', 'success');
+        }
+
+        function showRegistrationError(message) {
+            const error = document.getElementById('register-error');
+            error.innerText = message;
+            error.classList.remove('hidden');
+        }
+
+        function clearRegistrationError() {
+            const error = document.getElementById('register-error');
+            if (!error) return;
+            error.innerText = '';
+            error.classList.add('hidden');
+        }
+
+        function handleLoginSubmit(e) {
+            e.preventDefault();
+            clearLoginError();
+            const email = document.getElementById('login-email').value.trim().toLowerCase();
+            const password = document.getElementById('login-password').value;
+            const user = registeredUsers.find(account => account.email === email && account.password === password);
+
+            if (!user) {
+                showLoginError('El correo o la contraseña son incorrectos. Verifica tus datos e inténtalo de nuevo.');
+                return;
+            }
+
+            setAuthenticatedUser(user);
+            document.getElementById('login-form').reset();
+            closeAuthModal();
+            switchTab('account');
+            showToast(`¡Bienvenido ${user.firstName}! Sesión iniciada correctamente.`, 'success');
+        }
+
+        function showLoginError(message) {
+            const error = document.getElementById('login-error');
+            error.innerText = message;
+            error.classList.remove('hidden');
+        }
+
+        function clearLoginError() {
+            const error = document.getElementById('login-error');
+            if (!error) return;
+            error.innerText = '';
+            error.classList.add('hidden');
+        }
+
+        function saveRegisteredUsers(users) {
+            try {
+                localStorage.setItem(USERS_STORAGE_KEY, JSON.stringify(users));
+                return true;
+            } catch (error) {
+                console.error('No se pudieron guardar las cuentas:', error);
+                showToast('No se pudo guardar la cuenta en el almacenamiento local.', 'error');
+                return false;
+            }
+        }
+
+        function setAuthenticatedUser(user, persistSession = true) {
+            currentUser = user;
+            document.getElementById('auth-btn-text').innerText = user.firstName;
+            syncPQRSAccountFields();
+            changeRole(user.role);
+            updateAdminVisibility();
+            refreshAccountChangeAlert();
+
+            if (persistSession) {
+                try {
+                    localStorage.setItem(SESSION_STORAGE_KEY, user.email);
+                } catch (error) {
+                    console.error('No se pudo guardar la sesión:', error);
+                    showToast('La sesión inició, pero no se pudo guardar para la próxima visita.', 'error');
+                }
+            }
+        }
+
+        function logout() {
+            try {
+                localStorage.removeItem(SESSION_STORAGE_KEY);
+            } catch (error) {
+                console.error('No se pudo cerrar la sesión guardada:', error);
+                showToast('No se pudo borrar la sesión guardada del navegador.', 'error');
+            }
+
+            currentUser = null;
+            updateAccountChangeAlert(false);
+            syncPQRSAccountFields();
+            currentRole = 'minorista';
+            document.getElementById('auth-btn-text').innerText = 'Ingresar / Registro';
+            document.getElementById('header-user-role').innerText = 'Visitante';
+            document.getElementById('role-banner-text').innerHTML = `Navegando como <strong>Cliente Minorista</strong>: Ventas al detal con domicilios en el Área Metropolitana de Medellín (Solo catálogo de comidas rápidas).`;
+            updateAdminVisibility();
+            renderCatalogs();
+            switchTab('catalog');
+            closeAuthModal();
+            showToast('Sesión cerrada correctamente.', 'success');
+        }
+
+        function accountChangesSeenKey(section) {
+            return `aliMarketAccountChangesSeen:${encodeURIComponent(currentUser.email.toLowerCase())}:${section}`;
+        }
+
+        function accountChangesLegacySeenKey() {
+            return `aliMarketAccountChangesSeen:${encodeURIComponent(currentUser.email.toLowerCase())}`;
+        }
+
+        function getAccountRecords(section) {
+            if (!currentUser) return [];
+            const records = section === 'orders' ? orders : pqrsRequests;
+            if (currentUser.role === 'admin') return records;
+            const email = currentUser.email.toLowerCase();
+            return records.filter(record => record.userEmail?.toLowerCase() === email);
+        }
+
+        function refreshAccountChangeAlert() {
+            if (!currentUser) {
+                updateAccountChangeAlert(false);
+                return;
+            }
+
+            try {
+                const legacySnapshot = localStorage.getItem(accountChangesLegacySeenKey());
+                let legacyData = null;
+                if (legacySnapshot) {
+                    try {
+                        legacyData = JSON.parse(legacySnapshot);
+                    } catch (error) {
+                        console.error('No se pudo migrar el estado anterior de novedades:', error);
+                    }
+                }
+                const hasOrderChanges = getChangedAccountRecordIds('orders', legacyData?.orders).size > 0;
+                const hasPQRSChanges = getChangedAccountRecordIds('pqrs', legacyData?.pqrs).size > 0;
+                updateAccountSectionAlert('orders', hasOrderChanges);
+                updateAccountSectionAlert('pqrs', hasPQRSChanges);
+                updateAccountChangeAlert(hasOrderChanges || hasPQRSChanges);
+            } catch (error) {
+                console.error('No se pudo comprobar si hay cambios en pedidos o PQRS:', error);
+                showToast('No se pudo comprobar si hay novedades en tu cuenta.', 'error');
+            }
+        }
+
+        function getSeenAccountRecordMap(section, legacyRecords) {
+            const key = accountChangesSeenKey(section);
+            const currentRecords = getAccountRecords(section);
+            const currentMap = Object.fromEntries(currentRecords.map(record => [
+                String(record.id),
+                JSON.stringify(record)
+            ]));
+            const stored = localStorage.getItem(key);
+            if (stored === null) {
+                let initialMap = currentMap;
+                if (Array.isArray(legacyRecords)) {
+                    initialMap = Object.fromEntries(legacyRecords.map(record => [
+                        String(record.id),
+                        JSON.stringify(record)
+                    ]));
+                }
+                localStorage.setItem(key, JSON.stringify(initialMap));
+                return initialMap;
+            }
+
+            const parsed = JSON.parse(stored);
+            if (Array.isArray(parsed)) {
+                const migratedMap = Object.fromEntries(parsed.map(record => [
+                    String(record.id),
+                    JSON.stringify(record)
+                ]));
+                localStorage.setItem(key, JSON.stringify(migratedMap));
+                return migratedMap;
+            }
+            if (!parsed || typeof parsed !== 'object') {
+                throw new Error(`El estado de cambios vistos para ${section} no es válido.`);
+            }
+            return parsed;
+        }
+
+        function getChangedAccountRecordIds(section, legacyRecords) {
+            if (!currentUser) return new Set();
+            try {
+                const seenRecords = getSeenAccountRecordMap(section, legacyRecords);
+                return new Set(getAccountRecords(section)
+                    .filter(record => seenRecords[String(record.id)] !== JSON.stringify(record))
+                    .map(record => String(record.id)));
+            } catch (error) {
+                console.error(`No se pudieron comprobar los cambios de ${section}:`, error);
+                showToast('No se pudieron comprobar los cambios de pedidos o PQRS.', 'error');
+                return new Set();
+            }
+        }
+
+        function markAccountRecordSeen(section, recordId, element) {
+            if (!currentUser) return;
+            try {
+                const record = getAccountRecords(section).find(item => String(item.id) === String(recordId));
+                if (!record) return;
+                const seenRecords = getSeenAccountRecordMap(section);
+                seenRecords[String(record.id)] = JSON.stringify(record);
+                localStorage.setItem(accountChangesSeenKey(section), JSON.stringify(seenRecords));
+                if (element) {
+                    element.classList.remove('border-amber-400', 'bg-amber-50', 'ring-1', 'ring-amber-300', 'outline', 'outline-2', 'outline-amber-400', 'cursor-pointer');
+                    element.classList.add('border-gray-200');
+                    element.removeAttribute('title');
+                    element.removeAttribute('tabindex');
+                    element.removeAttribute('aria-label');
+                    element.removeAttribute('data-account-record-viewable');
+                }
+                refreshAccountChangeAlert();
+            } catch (error) {
+                console.error(`No se pudo marcar como visto el registro ${recordId}:`, error);
+                showToast('No se pudo marcar el cambio como visto.', 'error');
+            }
+        }
+
+        function makeAccountRecordViewable(element, section, recordId) {
+            element.classList.add('cursor-pointer');
+            element.tabIndex = 0;
+            element.dataset.accountRecordViewable = 'true';
+            element.setAttribute('aria-label', section === 'orders'
+                ? 'Pedido con cambios sin revisar. Haz clic para marcarlo como visto.'
+                : 'PQRS con cambios sin revisar. Haz clic para marcarla como vista.');
+            element.addEventListener('click', () => markAccountRecordSeen(section, recordId, element));
+            element.addEventListener('keydown', event => {
+                if (event.target !== element || !['Enter', ' '].includes(event.key)) return;
+                event.preventDefault();
+                markAccountRecordSeen(section, recordId, element);
+            });
+        }
+
+        function createAccountSectionAlert(section) {
+            const alert = document.createElement('i');
+            alert.dataset.accountSectionAlert = section;
+            alert.dataset.lucide = 'circle-alert';
+            alert.className = 'hidden w-4 h-4 text-red-600';
+            alert.setAttribute('aria-label', section === 'orders'
+                ? 'Hay cambios en pedidos'
+                : 'Hay cambios en PQRS');
+            return alert;
+        }
+
+        function updateAccountSectionAlert(section, hasChanges) {
+            document.querySelectorAll(`[data-account-section-alert="${section}"]`).forEach(alert => {
+                alert.classList.toggle('hidden', !hasChanges);
+            });
+        }
+
+        function updateAccountChangeAlert(hasChanges) {
+            const alert = document.getElementById('account-change-alert');
+            if (!alert) return;
+            alert.classList.toggle('hidden', !hasChanges);
+            const button = document.getElementById('auth-btn');
+            if (button) {
+                button.setAttribute('aria-label', hasChanges
+                    ? 'Abrir cuenta. Hay cambios en pedidos o PQRS.'
+                    : currentUser ? 'Abrir cuenta' : 'Iniciar sesión o abrir perfil');
+            }
+        }
+
+        window.addEventListener('storage', event => {
+            if (event.key === ORDERS_STORAGE_KEY || event.key === PQRS_STORAGE_KEY) {
+                let updatedData;
+                try {
+                    updatedData = event.newValue ? JSON.parse(event.newValue) : [];
+                } catch (error) {
+                    console.error(`No se pudieron leer datos de cuenta desde otra pestaña (${event.key}):`, error);
+                    showToast('No se pudieron actualizar los datos de pedidos o PQRS desde otra pestaña.', 'error');
+                    return;
+                }
+                if (!Array.isArray(updatedData)) {
+                    console.error(`Se ignoraron datos inválidos en almacenamiento (${event.key}).`);
+                    showToast('Se detectaron datos de cuenta con formato inválido en otra pestaña.', 'error');
+                    return;
+                }
+                if (event.key === ORDERS_STORAGE_KEY) {
+                    orders = updatedData;
+                    renderAdminTables();
+                    renderAccountOrders();
+                } else {
+                    pqrsRequests = updatedData;
+                    renderAdminPQRS();
+                    renderAccountPQRS();
+                }
+                refreshAccountChangeAlert();
+            } else if (currentUser && event.key?.startsWith(`${accountChangesLegacySeenKey()}:`)) {
+                refreshAccountChangeAlert();
+            }
+        });
+
+        // --- NOTIFICACIONES TOAST SISTEMA ---
+        function showToast(message, type = 'info') {
+            const container = document.getElementById('toast-container');
+            const toast = document.createElement('div');
+            
+            const bgColor = type === 'success' ? 'bg-green-700 text-white' : (type === 'error' ? 'bg-red-700 text-white' : 'bg-gray-800 text-white');
+            
+            toast.className = `${bgColor} px-4 py-3 rounded-xl shadow-lg text-xs font-semibold flex items-center justify-between gap-3 animate-bounce`;
+            const text = document.createElement('span');
+            text.innerText = message;
+            const closeButton = document.createElement('button');
+            closeButton.type = 'button';
+            closeButton.innerText = '✕';
+            closeButton.className = 'text-white hover:opacity-75';
+            closeButton.addEventListener('click', () => toast.remove());
+            toast.append(text, closeButton);
+
+            container.appendChild(toast);
+            setTimeout(() => {
+                toast.remove();
+            }, 4000);
+        }
+    </script>
+</body>
+</html>
