@@ -46,7 +46,7 @@
                     </div>
                     <div>
                         <span class="font-bold text-xl tracking-tight block leading-none">Ali Market</span>
-                        <span class="text-xs text-brand-100 font-light">Restaurante & Alimentos al Vacío</span>
+                        <span class="text-sm text-white font-medium">Restaurante & Alimentos al Vacío</span>
                     </div>
                 </div>
 
@@ -95,14 +95,6 @@
         </div>
     </header>
 
-    <!-- Role Indicator Banner -->
-    <div id="role-banner" class="bg-amber-100 border-b border-amber-200 text-amber-800 px-4 py-2 text-xs sm:text-sm flex justify-between items-center">
-        <div class="flex items-center gap-2 max-w-7xl mx-auto w-full">
-            <i data-lucide="info" class="w-4 h-4 text-amber-600 flex-shrink-0"></i>
-            <span id="role-banner-text">Navegando como <strong>Cliente Minorista</strong>: Ventas al detal con domicilios en el Área Metropolitana de Medellín (Solo catálogo de comidas rápidas).</span>
-        </div>
-    </div>
-
     <!-- MAIN CONTENT CONTAINERS -->
     <main class="flex-grow max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-6">
 
@@ -117,11 +109,7 @@
             <!-- Banner promocional/informativo -->
             <div class="bg-gradient-to-r from-brand-700 to-brand-900 rounded-2xl p-6 text-white shadow-lg relative overflow-hidden">
                 <div class="relative z-10 max-w-2xl">
-                    <span class="bg-brand-500/30 text-brand-100 text-xs font-semibold px-3 py-1 rounded-full border border-brand-400/30 uppercase tracking-wider">Restaurante & Distribuidora Ali Market</span>
                     <h1 class="text-2xl sm:text-4xl font-extrabold mt-2 tracking-tight">Catálogo de Productos</h1>
-                    <p class="mt-2 text-brand-100 text-sm sm:text-base font-light">
-                        Selección exclusiva de comidas rápidas (al detal) y carnes/alimentos al vacío (al por mayor) con restricciones de compra según tu perfil de usuario.
-                    </p>
                 </div>
                 <div class="absolute -right-10 -bottom-10 opacity-15 pointer-events-none">
                     <i data-lucide="utensils" class="w-64 h-64"></i>
@@ -617,6 +605,24 @@
         </div>
     </div>
 
+    <div id="product-delete-modal" class="fixed inset-0 bg-black/50 backdrop-blur-sm z-[60] hidden items-center justify-center p-4" role="dialog" aria-modal="true" aria-labelledby="product-delete-title" aria-describedby="product-delete-message">
+        <div class="bg-white rounded-2xl shadow-xl max-w-md w-full p-6 space-y-4">
+            <div class="flex items-start gap-3">
+                <div class="bg-red-100 text-red-700 rounded-full p-2">
+                    <i data-lucide="trash-2" class="w-5 h-5"></i>
+                </div>
+                <div>
+                    <h3 id="product-delete-title" class="text-lg font-bold text-gray-900">Eliminar producto</h3>
+                    <p id="product-delete-message" class="mt-1 text-sm text-gray-600"></p>
+                </div>
+            </div>
+            <div class="flex justify-end gap-2 pt-2">
+                <button type="button" onclick="closeProductDeleteModal()" class="px-4 py-2 border border-gray-300 text-gray-700 text-sm font-semibold rounded-lg hover:bg-gray-50 transition">Cancelar</button>
+                <button type="button" onclick="confirmDeleteProductAdmin()" class="px-4 py-2 bg-red-700 hover:bg-red-800 text-white text-sm font-semibold rounded-lg transition">Eliminar producto</button>
+            </div>
+        </div>
+    </div>
+
     <div id="account-required-modal" class="fixed inset-0 bg-black/50 backdrop-blur-sm z-[60] hidden items-center justify-center p-4" role="dialog" aria-modal="true" aria-labelledby="account-required-title">
         <div class="bg-white rounded-2xl shadow-xl max-w-md w-full p-6 space-y-4">
             <div class="flex items-start gap-3">
@@ -762,6 +768,7 @@
         const ORDERS_STORAGE_KEY = 'aliMarketOrders';
         const PQRS_STORAGE_KEY = 'aliMarketPQRS';
         let pendingPQRSDeleteId = null;
+        let pendingProductDeleteId = null;
         let cart = []; // [{ product, quantity }]
         let orders = [
             {
@@ -904,19 +911,15 @@
             }
 
             currentRole = role;
-            const bannerText = document.getElementById('role-banner-text');
             const roleLabel = document.getElementById('header-user-role');
 
             if (role === 'minorista') {
-                bannerText.innerHTML = `Navegando como <strong>Cliente Minorista</strong>: Compras de comida rápida al detal y entregas en el Área Metropolitana de Medellín.`;
                 roleLabel.innerText = currentUser ? 'Cuenta minorista' : 'Visitante';
                 showCatalogSection('minorista');
             } else if (role === 'mayorista') {
-                bannerText.innerHTML = `Navegando como <strong>Cliente Mayorista</strong>: Compras en volumen de empacados al vacío. Aplica mínimo de 10kg/unidades con despacho nacional.`;
                 roleLabel.innerText = 'Cuenta mayorista';
                 showCatalogSection('mayorista');
             } else if (role === 'admin') {
-                bannerText.innerHTML = `Modo <strong>Administrador / Encargado</strong>: Tienes acceso completo para modificar inventario, añadir productos y asignar guías de despacho.`;
                 roleLabel.innerText = 'Administrador';
                 showCatalogSection('minorista');
             }
@@ -1360,7 +1363,7 @@
                         <button onclick="updateStockAdmin(${p.id})" class="ml-1 px-2 py-1 bg-brand-700 text-white font-bold rounded hover:bg-brand-800">
                             Guardar
                         </button>
-                        <button onclick="deleteProductAdmin(${p.id})" class="ml-1 px-2 py-1 bg-red-700 text-white font-bold rounded hover:bg-red-800">
+                        <button type="button" onclick="deleteProductAdmin(${p.id})" class="ml-1 inline-flex items-center gap-1 px-2.5 py-1.5 border border-red-200 bg-red-50 text-red-700 text-xs font-semibold rounded-lg transition hover:bg-red-100 hover:border-red-300">
                             Eliminar
                         </button>
                     </td>
@@ -1435,15 +1438,42 @@
             }
             const product = products.find(item => item.id === productId);
             if (!product) return;
-            if (!window.confirm(`¿Eliminar "${product.name}" del catálogo?`)) return;
+            pendingProductDeleteId = productId;
+            document.getElementById('product-delete-message').innerText =
+                `¿Seguro que deseas eliminar "${product.name}" del catálogo? Esta acción no se puede deshacer.`;
+            document.getElementById('product-delete-modal').classList.remove('hidden');
+            document.getElementById('product-delete-modal').classList.add('flex');
+            lucide.createIcons();
+        }
 
-            const updatedProducts = products.filter(item => item.id !== productId);
+        function closeProductDeleteModal() {
+            pendingProductDeleteId = null;
+            document.getElementById('product-delete-modal').classList.add('hidden');
+            document.getElementById('product-delete-modal').classList.remove('flex');
+        }
+
+        function confirmDeleteProductAdmin() {
+            if (currentRole !== 'admin') {
+                showToast('Acceso denegado: se requiere rol de administrador.', 'error');
+                closeProductDeleteModal();
+                return;
+            }
+            if (pendingProductDeleteId === null) return;
+            const product = products.find(item => item.id === pendingProductDeleteId);
+            if (!product) {
+                showToast('No se encontró el producto que deseas eliminar.', 'error');
+                closeProductDeleteModal();
+                return;
+            }
+
+            const updatedProducts = products.filter(item => item.id !== pendingProductDeleteId);
             if (!saveAppData(PRODUCTS_STORAGE_KEY, updatedProducts)) return;
             products = updatedProducts;
-            cart = cart.filter(item => item.product.id !== productId);
+            cart = cart.filter(item => item.product.id !== pendingProductDeleteId);
             updateCartBadge();
             renderCatalogs();
             renderAdminTables();
+            closeProductDeleteModal();
             showToast(`Producto "${product.name}" eliminado del catálogo.`, 'success');
         }
 
@@ -2105,7 +2135,6 @@
             currentRole = 'minorista';
             document.getElementById('auth-btn-text').innerText = 'Ingresar / Registro';
             document.getElementById('header-user-role').innerText = 'Visitante';
-            document.getElementById('role-banner-text').innerHTML = `Navegando como <strong>Cliente Minorista</strong>: Ventas al detal con domicilios en el Área Metropolitana de Medellín (Solo catálogo de comidas rápidas).`;
             updateAdminVisibility();
             renderCatalogs();
             switchTab('catalog');
